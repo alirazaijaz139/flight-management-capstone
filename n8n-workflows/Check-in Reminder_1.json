@@ -1,0 +1,131 @@
+{
+  "name": "Check-in Reminder_1",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        -176
+      ],
+      "id": "c8dfbecc-fe98-45b1-8fc9-65b307c40c38",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    b.id            AS booking_id,\n    p.full_name,\n    p.email,\n    b.seat_class,\n    f.flight_number,\n    f.origin,\n    f.destination,\n    f.departure_ts,\n    f.origin_tz,\n    to_char(f.departure_ts AT TIME ZONE f.origin_tz, 'DD Mon YYYY, HH12:MI AM') AS local_departure\nFROM bookings b\nJOIN passengers p ON p.id = b.passenger_id\nJOIN flights f    ON f.id = b.flight_id\nWHERE b.status = 'confirmed'\n  AND b.reminder_sent = false\n  AND f.status = 'scheduled'\n  AND f.departure_ts BETWEEN now() AND now() + interval '30 hours';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -176,
+        -160
+      ],
+      "id": "8249e52c-aa8c-4115-bec8-0635e26823f1",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "znvHCiUsbyW5FYu1",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Check-in Reminder — Flight {{ $json.flight_number }} to {{ $json.destination }}",
+        "emailType": "text",
+        "message": "=Dear {{ $json.full_name }},\n\nThis is a reminder that check-in is now open for your flight.\n\nFlight: {{ $json.flight_number }} ({{ $json.origin }} → {{ $json.destination }})\nDeparture (local time): {{ $json.local_departure }}\nClass: {{ $json.seat_class }}\n\nPlease complete check-in before arriving at the airport.\n\nSafe travels!\nFlight Management Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        48,
+        -160
+      ],
+      "id": "556a4f46-412d-4cb9-a59b-40f6bc34496c",
+      "name": "Send a message",
+      "webhookId": "b4eb3314-2bb2-4daf-b549-ab4ff0226f52",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hwpljPpPF89Kc1QP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE bookings\nSET reminder_sent = true\nWHERE id = {{ $('Execute a SQL query').item.json.booking_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        272,
+        -160
+      ],
+      "id": "2d270bdc-1689-4a10-93a6-02b0dcd933ac",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "znvHCiUsbyW5FYu1",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4b5e977c-dd75-4aa8-b93b-18b8f570a2b1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "27cc335175a640f75dc4b2c5e1907271b8ea1e7830249a3a141904eafcb52fe1"
+  },
+  "nodeGroups": [],
+  "id": "O80plJSBh1FgpdT9",
+  "tags": []
+}

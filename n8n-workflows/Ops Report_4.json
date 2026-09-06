@@ -1,0 +1,99 @@
+{
+  "name": "Ops Report_4",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        -224
+      ],
+      "id": "f1f8607b-1e41-42b3-a1a5-ec132917aaf6",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    f.flight_number,\n    f.origin || ' → ' || f.destination AS route,\n    f.departure_ts::date AS flight_date,\n    SUM(sc.total_seats)                      AS total_seats,\n    SUM(sc.total_seats - sc.available_seats) AS booked_seats,\n    ROUND(100.0 * SUM(sc.total_seats - sc.available_seats)\n          / NULLIF(SUM(sc.total_seats),0), 1) AS load_factor_pct,\n    SUM((sc.total_seats - sc.available_seats) * sc.base_price) AS est_revenue\nFROM flights f\nJOIN seat_classes sc ON sc.flight_id = f.id\nWHERE f.status = 'scheduled'\nGROUP BY f.id, f.flight_number, f.origin, f.destination, f.departure_ts\nORDER BY f.departure_ts;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -240,
+        -208
+      ],
+      "id": "5f3b87e0-6327-4225-af82-f4df132c7f28",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "znvHCiUsbyW5FYu1",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "alirazaijaz931@gmail.com",
+        "subject": "=Daily Ops Report — {{ $json.flight_date }}",
+        "emailType": "text",
+        "message": "={{ $json.flight_number }} ({{ $json.route }}): {{ $json.booked_seats }}/{{ $json.total_seats }} seats, load factor {{ $json.load_factor_pct }}%, est. revenue {{ $json.est_revenue }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -16,
+        -208
+      ],
+      "id": "7115e561-27b0-4213-85e5-d79d863267c3",
+      "name": "Send a message",
+      "webhookId": "b89af61c-5452-4e34-ad42-97d39ec4de8d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hwpljPpPF89Kc1QP",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a2874aa3-68ab-4fe8-8d35-a5aba509c724",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "27cc335175a640f75dc4b2c5e1907271b8ea1e7830249a3a141904eafcb52fe1"
+  },
+  "nodeGroups": [],
+  "id": "JcBvvbdTSQgdN0lx",
+  "tags": []
+}

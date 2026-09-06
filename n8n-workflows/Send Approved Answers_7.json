@@ -1,0 +1,131 @@
+{
+  "name": "Send Approved Answers_7",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        -208
+      ],
+      "id": "9f57c252-4d20-419b-b5ca-5a101895594b",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id AS query_id, passenger_email, question, draft_answer\nFROM support_queries\nWHERE approved = true\n  AND draft_answer IS NOT NULL\n  AND sent_at IS NULL;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -224,
+        -192
+      ],
+      "id": "84d46996-eeb2-40bc-bce8-e37e2194ce34",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "znvHCiUsbyW5FYu1",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.passenger_email }}",
+        "subject": "Re: Your question about your booking",
+        "emailType": "text",
+        "message": "={{ $json.draft_answer }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        -192
+      ],
+      "id": "e97f09f8-b0a1-412c-ab9b-a5d9434daabe",
+      "name": "Send a message",
+      "webhookId": "2e49361e-8904-494c-a617-1457603efc5f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hwpljPpPF89Kc1QP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE support_queries\nSET sent_at = now()\nWHERE id = {{ $('Execute a SQL query').item.json.query_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        224,
+        -192
+      ],
+      "id": "7cabd512-82eb-4a78-ba3d-05ac0d72feb8",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "znvHCiUsbyW5FYu1",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e03b451b-baee-4e00-96b7-91f4d1235e6f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "27cc335175a640f75dc4b2c5e1907271b8ea1e7830249a3a141904eafcb52fe1"
+  },
+  "nodeGroups": [],
+  "id": "yEkwlBqwFe15gkOU",
+  "tags": []
+}

@@ -1,0 +1,163 @@
+{
+  "name": "Refund Escalation_2",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        -224
+      ],
+      "id": "0e0a5772-10b7-4964-977b-4fd9917cd2ee",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "sendTo": "=alirazaijaz931@gmail.com",
+        "subject": "=Refund #{{ $json.refund_id }} pending for {{ $json.days_pending }} days",
+        "emailType": "text",
+        "message": "=Passenger: {{ $json.full_name }} | Booking: {{ $json.booking_id }} | Amount: {{ $json.amount }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -64,
+        -176
+      ],
+      "id": "f6295948-3718-4619-87ea-5bf5b320a38c",
+      "name": "Send a message",
+      "webhookId": "56e3a40d-510a-42ad-bb80-f1ed1f748279",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hwpljPpPF89Kc1QP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    r.id     AS refund_id,\n    r.booking_id,\n    r.amount,\n    r.created_at,\n    EXTRACT(DAY FROM now() - r.created_at) AS days_pending,\n    p.full_name,\n    p.email\nFROM refunds r\nJOIN bookings b   ON b.id = r.booking_id\nJOIN passengers p ON p.id = b.passenger_id\nWHERE r.status = 'pending'\n  AND r.created_at < now() - interval '5 days'\n  AND r.escalated_at IS NULL;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -336,
+        -192
+      ],
+      "id": "52abdf6f-6bf5-4d15-b8d3-86ae4289e762",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "znvHCiUsbyW5FYu1",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE refunds\nSET escalated_at = now()\nWHERE id = {{ $('Execute a SQL query').item.json.refund_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        192,
+        -160
+      ],
+      "id": "8948d79c-15fa-4871-b18d-1cf4e86158a7",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "znvHCiUsbyW5FYu1",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO notifications_log (booking_id, notification_type, details)\nVALUES (\n  {{ $('Execute a SQL query').item.json.booking_id }},\n  'refund_escalation',\n  '{\"refund_id\": {{ $('Execute a SQL query').item.json.refund_id }}, \"days_pending\": {{ $('Execute a SQL query').item.json.days_pending }}}'\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        448,
+        -112
+      ],
+      "id": "b75fa5ce-88b2-4609-b7f0-72b6e449a3d0",
+      "name": "Execute a SQL query2",
+      "credentials": {
+        "postgres": {
+          "id": "znvHCiUsbyW5FYu1",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a603a512-f186-40ba-b9f7-aab06c6a0ad0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "27cc335175a640f75dc4b2c5e1907271b8ea1e7830249a3a141904eafcb52fe1"
+  },
+  "nodeGroups": [],
+  "id": "1RvQHPf168boKamO",
+  "tags": []
+}

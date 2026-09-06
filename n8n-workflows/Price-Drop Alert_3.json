@@ -1,0 +1,163 @@
+{
+  "name": "Price-Drop Alert_3",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        -192
+      ],
+      "id": "4be96dd9-3485-4953-8de8-75d8c4866b57",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    pa.id      AS alert_id,\n    pa.passenger_id,\n    p.full_name,\n    p.email,\n    pa.origin,\n    pa.destination,\n    pa.seat_class,\n    pa.threshold_price,\n    pa.last_alerted_price,\n    f.id       AS flight_id,\n    f.flight_number,\n    f.departure_ts,\n    sc.base_price AS current_price,\n    sc.currency\nFROM price_alerts pa\nJOIN passengers p   ON p.id = pa.passenger_id\nJOIN flights f      ON f.origin = pa.origin\n                   AND f.destination = pa.destination\n                   AND f.status = 'scheduled'\n                   AND f.departure_ts > now()\nJOIN seat_classes sc ON sc.flight_id = f.id\n                    AND sc.class = pa.seat_class\n                    AND sc.available_seats > 0\nWHERE pa.active = true\n  AND sc.base_price <= pa.threshold_price\n  AND (\n        pa.last_alerted_price IS NULL\n        OR sc.base_price < pa.last_alerted_price * 0.95\n      );",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -224,
+        -192
+      ],
+      "id": "1493f5a0-5a49-42f5-bfab-902ea8936ba8",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "znvHCiUsbyW5FYu1",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Price drop: {{ $json.origin }} → {{ $json.destination }} now {{ $json.current_price }} {{ $json.currency }}",
+        "emailType": "text",
+        "message": "=Good news {{ $json.full_name }}! Flight {{ $json.flight_number }} ({{ $json.seat_class }}) is now {{ $json.current_price }} {{ $json.currency }} — below your target of {{ $json.threshold_price }}. Departs: {{ $json.departure_ts\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        -192
+      ],
+      "id": "0b520b66-c60e-43f2-a233-0194f18eab2a",
+      "name": "Send a message",
+      "webhookId": "8bd34fd5-846a-4ebe-9b41-dd63d431c241",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hwpljPpPF89Kc1QP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE price_alerts\nSET last_alerted_price = {{ $('Execute a SQL query').item.json.current_price }},\n    last_alerted_at = now()\nWHERE id = {{ $('Execute a SQL query').item.json.alert_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        224,
+        -192
+      ],
+      "id": "8c32b1f0-95bd-4b7f-bc07-52efded8da87",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "znvHCiUsbyW5FYu1",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO notifications_log (passenger_id, notification_type, details)\nVALUES (\n  {{ $('Execute a SQL query').item.json.passenger_id }},\n  'price_drop',\n  '{\"alert_id\": {{ $('Execute a SQL query').item.json.alert_id }}, \"flight_id\": {{ $('Execute a SQL query').item.json.flight_id }}, \"price\": {{ $('Execute a SQL query').item.json.current_price }}}'\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        448,
+        -192
+      ],
+      "id": "0ee9c7ee-01c1-4b99-8d66-63ce1d73cd5d",
+      "name": "Execute a SQL query2",
+      "credentials": {
+        "postgres": {
+          "id": "znvHCiUsbyW5FYu1",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a37b199b-7d19-4b0c-b70d-62897f36fa8d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "27cc335175a640f75dc4b2c5e1907271b8ea1e7830249a3a141904eafcb52fe1"
+  },
+  "nodeGroups": [],
+  "id": "W4aHp0rHFxA93TYc",
+  "tags": []
+}

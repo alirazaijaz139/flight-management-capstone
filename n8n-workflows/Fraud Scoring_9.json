@@ -1,0 +1,96 @@
+{
+  "name": "Fraud Scoring_9",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        -112
+      ],
+      "id": "6262401d-edba-4b3e-9c83-d4f9ce8fc241",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH recent AS (\n    SELECT b.id AS booking_id,\n           b.passenger_id,\n           b.created_at,\n           count(*) OVER (PARTITION BY b.passenger_id) AS bookings_by_passenger,\n           count(*) FILTER (WHERE b.status = 'cancelled')\n               OVER (PARTITION BY b.passenger_id)      AS cancelled_by_passenger\n    FROM bookings b\n    WHERE b.created_at > now() - interval '24 hours'\n      AND b.fraud_checked = false\n)\nSELECT booking_id, passenger_id,\n       bookings_by_passenger,\n       cancelled_by_passenger,\n       (CASE WHEN bookings_by_passenger >= 5 THEN 40 ELSE 0 END\n      + CASE WHEN cancelled_by_passenger >= 3 THEN 30 ELSE 0 END\n      + CASE WHEN bookings_by_passenger >= 3\n              AND cancelled_by_passenger >= 2 THEN 30 ELSE 0 END) AS fraud_score\nFROM recent;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -48,
+        -112
+      ],
+      "id": "b750349d-6962-4ed0-8007-97f5946d9017",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "znvHCiUsbyW5FYu1",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH flagged AS (\n    INSERT INTO fraud_flags (booking_id, score, reasons, flagged_by, reviewed, created_at)\n    SELECT {{ $('Execute a SQL query').item.json.booking_id }},\n           {{ $('Execute a SQL query').item.json.fraud_score }},\n           '{\"bookings_24h\": {{ $('Execute a SQL query').item.json.bookings_by_passenger }}, \"cancels_24h\": {{ $('Execute a SQL query').item.json.cancelled_by_passenger }}}'::jsonb,\n           'n8n_fraud_job',\n           false,\n           now()\n    WHERE {{ $('Execute a SQL query').item.json.fraud_score }} >= 50\n    RETURNING id\n)\nUPDATE bookings SET fraud_checked = true\nWHERE id = {{ $('Execute a SQL query').item.json.booking_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        176,
+        -112
+      ],
+      "id": "13b5f281-3177-4af2-9a34-7cb54faeea9d",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "znvHCiUsbyW5FYu1",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e46cdc7e-6ab6-4373-8768-fc9b91e33461",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "27cc335175a640f75dc4b2c5e1907271b8ea1e7830249a3a141904eafcb52fe1"
+  },
+  "nodeGroups": [],
+  "id": "SFbgieQSOCvCEmvP",
+  "tags": []
+}

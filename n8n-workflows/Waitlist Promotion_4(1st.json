@@ -1,0 +1,131 @@
+{
+  "name": "Waitlist Promotion_4(1st",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        -112
+      ],
+      "id": "d6c1c0ab-237f-4ef5-bfab-0ad315177285",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH freed AS (\n    SELECT sc.flight_id, sc.class\n    FROM seat_classes sc\n    JOIN flights f ON f.id = sc.flight_id\n    WHERE sc.available_seats > 0\n      AND f.status = 'scheduled'\n      AND f.departure_ts > now()\n),\ncandidate AS (\n    SELECT w.id\n    FROM waitlist w\n    JOIN freed fr ON fr.flight_id = w.flight_id AND fr.class = w.seat_class\n    WHERE w.status = 'waiting'\n    ORDER BY w.joined_at\n    FOR UPDATE SKIP LOCKED\n    LIMIT 1\n)\nUPDATE waitlist w\nSET status = 'offered',\n    offered_at = now(),\n    offer_expires_at = now() + interval '6 hours'\nFROM candidate c, passengers p\nWHERE w.id = c.id AND p.id = w.passenger_id\nRETURNING w.id AS waitlist_id, w.flight_id, w.passenger_id, w.seat_class,\n          w.offer_expires_at, p.email, p.full_name;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -64,
+        -112
+      ],
+      "id": "c1e1017c-d931-4930-8ac6-d4e38965ce55",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "znvHCiUsbyW5FYu1",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Seat available on flight {{ $json.flight_id }} — claim within 6 hours!",
+        "emailType": "text",
+        "message": "=Hello {{ $json.full_name }},\n\nGood news! A {{ $json.seat_class }} class seat has opened up on your waitlisted flight.\n\nYou have until {{ $json.offer_expires_at }} to claim this seat. If unclaimed by then, it will be offered to the next passenger on the waitlist.\n\nThank you,\nYour Airline",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        160,
+        -112
+      ],
+      "id": "f0273a0d-f914-4b15-988b-e7f352b50668",
+      "name": "Send a message",
+      "webhookId": "e0118546-a729-446d-af4d-d0aff8d9ebd9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hwpljPpPF89Kc1QP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO notifications_log (passenger_id, notification_type, details)\nVALUES ({{ $('Execute a SQL query').item.json.passenger_id }},\n        'waitlist_promotion',\n        '{\"waitlist_id\": {{ $('Execute a SQL query').item.json.waitlist_id }}, \"seat_class\": \"{{ $('Execute a SQL query').item.json.seat_class }}\", \"expires\": \"{{ $('Execute a SQL query').item.json.offer_expires_at }}\"}');",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        384,
+        -112
+      ],
+      "id": "1db1a5e2-b86a-47e7-9622-2090ff4ef31b",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "znvHCiUsbyW5FYu1",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1f995711-4a31-4ad8-bfd3-22e40124f34e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "27cc335175a640f75dc4b2c5e1907271b8ea1e7830249a3a141904eafcb52fe1"
+  },
+  "nodeGroups": [],
+  "id": "uUdbWnHjfGfHKmfO",
+  "tags": []
+}
