@@ -69,11 +69,12 @@ class SeatClassAdjust(BaseModel):
     new_total_seats: int
 
 
-# ---------- Admin: create flight (super_admin only) ----------
+# ---------- Admin: create flight (super_admin only, idempotent via header) ----------
 
 @app.post("/admin/flights", status_code=201)
 def create_flight(flight: FlightCreate,
-                  x_admin_role: str | None = Header(default=None)):
+                  x_admin_role: str | None = Header(default=None),
+                  idempotency_key: str = Header(..., alias="Idempotency-Key")):
     role = check_role(x_admin_role, "create_flight")
 
     for sc in flight.seat_classes:
@@ -88,6 +89,18 @@ def create_flight(flight: FlightCreate,
             f"Seat classes sum to {total} but capacity is {flight.total_capacity}")
 
     with engine.begin() as conn:
+        # IDEMPOTENCY: same header key on a retried create = return the same flight
+        if idempotency_key:
+            existing = conn.execute(text("""
+                SELECT entity_id FROM audit_log
+                WHERE action = 'create_flight'
+                  AND after_state->>'idempotency_key' = :key
+            """), {"key": idempotency_key}).first()
+            if existing:
+                return {"flight_id": existing.entity_id,
+                        "idempotent_replay": True,
+                        "message": "This create-flight request was already processed"}
+
         dup = conn.execute(text("""
             SELECT id FROM flights
             WHERE flight_number = :fn
@@ -116,23 +129,43 @@ def create_flight(flight: FlightCreate,
             """), {"fid": flight_id, "cls": sc.class_name,
                    "total": sc.total_seats, "price": sc.base_price})
 
+            # Generate the physical seat map for this class
+            prefix = sc.class_name[0].upper()   # 'F', 'B', 'E'
+            for seat_num in range(1, sc.total_seats + 1):
+                conn.execute(text("""
+                    INSERT INTO seats (flight_id, seat_number, class, is_occupied)
+                    VALUES (:fid, :sn, :cls, false)
+                """), {"fid": flight_id, "sn": f"{prefix}{seat_num}", "cls": sc.class_name})
+
         conn.execute(text("""
             INSERT INTO audit_log (actor, actor_role, action, entity_type, entity_id, after_state)
             VALUES ('admin', :role, 'create_flight', 'flight', :fid, :after)
         """), {"role": role, "fid": flight_id,
-               "after": f'{{"flight_number": "{flight.flight_number}", "capacity": {flight.total_capacity}, "status": "scheduled"}}'})
+               "after": f'{{"flight_number": "{flight.flight_number}", "capacity": {flight.total_capacity}, "status": "scheduled", "idempotency_key": {f"{chr(34)}{idempotency_key}{chr(34)}" if idempotency_key else "null"}}}'})
 
     return {"flight_id": flight_id, "message": f"Flight {flight.flight_number} created"}
 
 
-# ---------- Admin: cancel flight (super_admin only) ----------
+# ---------- Admin: cancel flight (super_admin only, idempotent via header) ----------
 
 @app.post("/admin/flights/{flight_id}/cancel")
 def cancel_flight(flight_id: int,
-                  x_admin_role: str | None = Header(default=None)):
+                  x_admin_role: str | None = Header(default=None),
+                  idempotency_key: str = Header(..., alias="Idempotency-Key")):
     role = check_role(x_admin_role, "cancel_flight")
 
     with engine.begin() as conn:
+        if idempotency_key:
+            existing = conn.execute(text("""
+                SELECT entity_id, after_state FROM audit_log
+                WHERE action = 'cancel_flight'
+                  AND after_state->>'idempotency_key' = :key
+            """), {"key": idempotency_key}).first()
+            if existing:
+                return {"flight_id": existing.entity_id,
+                        "idempotent_replay": True,
+                        "message": "This cancel-flight request was already processed"}
+
         flight = conn.execute(text("""
             SELECT id, flight_number, status FROM flights WHERE id = :fid
         """), {"fid": flight_id}).first()
@@ -157,6 +190,7 @@ def cancel_flight(flight_id: int,
             RETURNING id
         """), {"fid": flight_id}).fetchall()
 
+        key_json = f'"{idempotency_key}"' if idempotency_key else "null"
         conn.execute(text("""
             INSERT INTO audit_log (actor, actor_role, action, entity_type, entity_id,
                                    before_state, after_state)
@@ -164,7 +198,7 @@ def cancel_flight(flight_id: int,
                     :before, :after)
         """), {"role": role, "fid": flight_id,
                "before": f'{{"status": "{before_status}"}}',
-               "after": f'{{"status": "cancelled", "refunds_created": {len(refunds_created)}}}'})
+               "after": f'{{"status": "cancelled", "refunds_created": {len(refunds_created)}, "idempotency_key": {key_json}}}'})
 
     return {"flight_id": flight_id,
             "flight_number": flight.flight_number,
@@ -176,13 +210,30 @@ def cancel_flight(flight_id: int,
 
 @app.patch("/admin/flights/{flight_id}/schedule")
 def edit_schedule(flight_id: int, edit: ScheduleEdit,
-                  x_admin_role: str | None = Header(default=None)):
+                  x_admin_role: str | None = Header(default=None),
+                  idempotency_key: str = Header(..., alias="Idempotency-Key")):
     role = check_role(x_admin_role, "edit_schedule")
 
     with engine.begin() as conn:
+        # IDEMPOTENCY: same key = do not process the schedule change twice
+        existing = conn.execute(text("""
+            SELECT entity_id, after_state
+            FROM audit_log
+            WHERE action = 'edit_schedule'
+              AND after_state->>'idempotency_key' = :key
+        """), {"key": idempotency_key}).first()
+
+        if existing:
+            return {
+                "flight_id": existing.entity_id,
+                "idempotent_replay": True,
+                "message": "This schedule-edit request was already processed"
+            }
+
         flight = conn.execute(text("""
             SELECT id, flight_number, status, departure_ts, arrival_ts
             FROM flights WHERE id = :fid
+            FOR UPDATE
         """), {"fid": flight_id}).first()
 
         if not flight:
@@ -220,7 +271,7 @@ def edit_schedule(flight_id: int, edit: ScheduleEdit,
                     :before, :after)
         """), {"role": role, "fid": flight_id,
                "before": f'{{"departure_ts": "{flight.departure_ts}", "arrival_ts": "{flight.arrival_ts}"}}',
-               "after": f'{{"departure_ts": "{edit.new_departure_ts}", "arrival_ts": "{edit.new_arrival_ts}", "shift_hours": {round(float(shift_hours), 1)}, "affected_bookings": {affected}}}'})
+               "after": f'{{"departure_ts": "{edit.new_departure_ts}", "arrival_ts": "{edit.new_arrival_ts}", "shift_hours": {round(float(shift_hours), 1)}, "affected_bookings": {affected}, "idempotency_key": "{idempotency_key}"}}'})
 
     return {
         "flight_id": flight_id,
@@ -238,15 +289,37 @@ def edit_schedule(flight_id: int, edit: ScheduleEdit,
 
 @app.patch("/admin/flights/{flight_id}/seat-classes")
 def adjust_seat_class(flight_id: int, adj: SeatClassAdjust,
-                      x_admin_role: str | None = Header(default=None)):
+                      x_admin_role: str | None = Header(default=None),
+                      idempotency_key: str = Header(..., alias="Idempotency-Key")):
     role = check_role(x_admin_role, "adjust_seat_class")
 
     if adj.new_total_seats <= 0:
         raise HTTPException(422, "Seat count must be positive")
 
     with engine.begin() as conn:
+        # IDEMPOTENCY: same key = do not adjust the same class twice
+        existing = conn.execute(text("""
+            SELECT entity_id, after_state
+            FROM audit_log
+            WHERE action = 'adjust_seat_class'
+              AND after_state->>'idempotency_key' = :key
+        """), {"key": idempotency_key}).first()
+
+        if existing:
+            return {
+                "seat_class_id": existing.entity_id,
+                "flight_id": existing.after_state.get("flight_id"),
+                "class": existing.after_state.get("class"),
+                "total_seats": existing.after_state.get("total"),
+                "available_seats": existing.after_state.get("available"),
+                "booked_seats": existing.after_state.get("booked"),
+                "idempotent_replay": True,
+                "message": "This seat-class adjustment was already processed"
+            }
+
         flight = conn.execute(text("""
             SELECT id, flight_number, status FROM flights WHERE id = :fid
+            FOR UPDATE
         """), {"fid": flight_id}).first()
         if not flight:
             raise HTTPException(404, f"Flight {flight_id} not found")
@@ -283,17 +356,15 @@ def adjust_seat_class(flight_id: int, adj: SeatClassAdjust,
                     :before, :after)
         """), {"role": role, "scid": sc.id,
                "before": f'{{"class": "{adj.class_name}", "total": {sc.total_seats}, "available": {sc.available_seats}}}',
-               "after": f'{{"class": "{adj.class_name}", "total": {adj.new_total_seats}, "available": {new_available}, "booked": {sc.booked}}}'})
+               "after": f'{{"flight_id": {flight_id}, "class": "{adj.class_name}", "total": {adj.new_total_seats}, "available": {new_available}, "booked": {sc.booked}, "idempotency_key": "{idempotency_key}"}}'})
 
     return {"flight_id": flight_id, "class": adj.class_name,
             "total_seats": adj.new_total_seats,
             "available_seats": new_available,
             "booked_seats": sc.booked}
-    
-    import uuid
-from datetime import datetime, timezone
 
-# ---------- Booking: create with hold ----------
+
+# ---------- Booking: create with hold (idempotent via header) ----------
 
 HOLD_MINUTES = 15   # price-hold duration between search and payment (file requirement)
 
@@ -302,16 +373,16 @@ class BookingCreate(BaseModel):
     passenger_id: int
     seat_class: str            # first / business / economy
     fare: str                  # basic_economy / flexible (your enum's labels)
-    idempotency_key: str       # client-generated unique key per booking attempt
 
 
 @app.post("/bookings", status_code=201)
-def create_booking(req: BookingCreate):
+def create_booking(req: BookingCreate,
+                   idempotency_key: str = Header(..., alias="Idempotency-Key")):
     with engine.begin() as conn:
-        # 1. IDEMPOTENCY: same key = return the same booking, never book twice (file requirement)
+        # 1. IDEMPOTENCY: same header key = return the same booking, never book twice
         existing = conn.execute(text("""
             SELECT id, status FROM bookings WHERE idempotency_key = :key
-        """), {"key": req.idempotency_key}).first()
+        """), {"key": idempotency_key}).first()
         if existing:
             return {"booking_id": existing.id, "status": str(existing.status),
                     "idempotent_replay": True,
@@ -332,12 +403,23 @@ def create_booking(req: BookingCreate):
             UPDATE seat_classes
             SET available_seats = available_seats - 1
             WHERE flight_id = :fid AND class = :cls AND available_seats >= 1
-            RETURNING id, base_price
+            RETURNING id, base_price, booking_cutoff_minutes
         """), {"fid": req.flight_id, "cls": req.seat_class}).first()
 
         if not seat:
             raise HTTPException(409,
                 f"No {req.seat_class} seats available on this flight")
+
+        # CUTOFF CHECK: class-specific booking cutoff (e.g. First/Business allow later cutoff)
+        minutes_left = conn.execute(text("""
+            SELECT EXTRACT(EPOCH FROM (:dep)::timestamptz - now()) / 60
+        """), {"dep": flight.departure_ts}).scalar()
+
+        if seat.booking_cutoff_minutes is not None and minutes_left < seat.booking_cutoff_minutes:
+            raise HTTPException(422,
+                f"Booking closed for {req.seat_class}: cutoff is "
+                f"{seat.booking_cutoff_minutes} min before departure, "
+                f"only {round(float(minutes_left))} min remain")
 
         # 4. Create the booking as a HOLD with expiry (file requirement)
         booking_id = conn.execute(text("""
@@ -347,7 +429,7 @@ def create_booking(req: BookingCreate):
             VALUES (:key, :fid, :pid, :cls, :fare, :price, 'USD',
                     'held', now() + interval '15 minutes')
             RETURNING id
-        """), {"key": req.idempotency_key, "fid": req.flight_id,
+        """), {"key": idempotency_key, "fid": req.flight_id,
                "pid": req.passenger_id, "cls": req.seat_class,
                "fare": req.fare, "price": seat.base_price}).scalar()
 
@@ -360,8 +442,24 @@ def create_booking(req: BookingCreate):
 # ---------- Booking: confirm (payment succeeded) ----------
 
 @app.post("/bookings/{booking_id}/confirm")
-def confirm_booking(booking_id: int):
+def confirm_booking(booking_id: int,
+                    idempotency_key: str = Header(..., alias="Idempotency-Key")):
     with engine.begin() as conn:
+        # IDEMPOTENCY: same confirmation key = never charge/confirm twice
+        existing = conn.execute(text("""
+            SELECT entity_id
+            FROM audit_log
+            WHERE action = 'confirm_booking'
+              AND after_state->>'idempotency_key' = :key
+        """), {"key": idempotency_key}).first()
+        if existing:
+            return {
+                "booking_id": existing.entity_id,
+                "status": "confirmed",
+                "idempotent_replay": True,
+                "message": "This confirmation request was already processed"
+            }
+
         # Only a live, unexpired hold can confirm — atomic again
         row = conn.execute(text("""
             UPDATE bookings
@@ -388,22 +486,30 @@ def confirm_booking(booking_id: int):
             VALUES (:bid, :amt, 'completed', now())
         """), {"bid": booking_id, "amt": row.price_paid})
 
+        conn.execute(text("""
+            INSERT INTO audit_log (actor, actor_role, action, entity_type, entity_id, after_state)
+            VALUES ('customer', 'ops_agent', 'confirm_booking', 'booking', :bid, :after)
+        """), {
+            "bid": booking_id,
+            "after": f'{{"status": "confirmed", "amount_paid": {float(row.price_paid)}, "idempotency_key": "{idempotency_key}"}}'
+        })
+
     return {"booking_id": booking_id, "status": "confirmed",
             "amount_paid": float(row.price_paid)}
-    
-    
-    # ---------- Booking: group (all-or-nothing) ----------
+
+
+# ---------- Booking: group (all-or-nothing, idempotent via header) ----------
 
 class GroupBookingCreate(BaseModel):
     flight_id: int
     passenger_ids: list[int]      # one seat per passenger
     seat_class: str
     fare: str
-    idempotency_key: str
 
 
 @app.post("/bookings/group", status_code=201)
-def create_group_booking(req: GroupBookingCreate):
+def create_group_booking(req: GroupBookingCreate,
+                         idempotency_key: str = Header(..., alias="Idempotency-Key")):
     n = len(req.passenger_ids)
     if n < 1:
         raise HTTPException(422, "At least one passenger required")
@@ -412,7 +518,7 @@ def create_group_booking(req: GroupBookingCreate):
         # Idempotency for the whole group
         existing = conn.execute(text("""
             SELECT group_id FROM bookings WHERE idempotency_key = :key
-        """), {"key": req.idempotency_key + "-p0"}).first()
+        """), {"key": idempotency_key + "-p0"}).first()
         if existing:
             return {"group_id": str(existing.group_id),
                     "idempotent_replay": True}
@@ -452,7 +558,7 @@ def create_group_booking(req: GroupBookingCreate):
                 VALUES (:key, :fid, :pid, :cls, :fare, :price, 'USD',
                         'held', now() + interval '15 minutes', :gid)
                 RETURNING id
-            """), {"key": f"{req.idempotency_key}-p{i}", "fid": req.flight_id,
+            """), {"key": f"{idempotency_key}-p{i}", "fid": req.flight_id,
                    "pid": pid, "cls": req.seat_class, "fare": req.fare,
                    "price": seat.base_price, "gid": group_id}).scalar()
             booking_ids.append(bid)
@@ -460,13 +566,29 @@ def create_group_booking(req: GroupBookingCreate):
     return {"group_id": group_id, "booking_ids": booking_ids,
             "seats_held": n, "price_each": float(seat.base_price),
             "hold_expires_in_minutes": HOLD_MINUTES}
-    
-    
-    # ---------- Booking: cancel (fare-type branching) ----------
+
+
+# ---------- Booking: cancel (fare-type branching) ----------
 
 @app.post("/bookings/{booking_id}/cancel")
-def cancel_booking(booking_id: int):
+def cancel_booking(booking_id: int,
+                   idempotency_key: str = Header(..., alias="Idempotency-Key")):
     with engine.begin() as conn:
+        # IDEMPOTENCY: same cancellation key = do not cancel/refund twice
+        existing = conn.execute(text("""
+            SELECT entity_id
+            FROM audit_log
+            WHERE action = 'cancel_booking'
+              AND after_state->>'idempotency_key' = :key
+        """), {"key": idempotency_key}).first()
+        if existing:
+            return {
+                "booking_id": existing.entity_id,
+                "status": "cancelled",
+                "idempotent_replay": True,
+                "message": "This cancellation request was already processed"
+            }
+
         # Lock the booking row — no concurrent cancel/confirm race
         b = conn.execute(text("""
             SELECT b.id, b.status, b.fare, b.seat_class, b.price_paid,
@@ -536,15 +658,16 @@ def cancel_booking(booking_id: int):
                     :before, :after)
         """), {"bid": booking_id,
                "before": f'{{"status": "{b.status}", "fare": "{fare}"}}',
-               "after": f'{{"status": "cancelled", "refund": {refund_amount}, "reason": "{refund_reason}"}}'})
+               "after": f'{{"status": "cancelled", "refund": {refund_amount}, "refund_id": {refund_id if refund_id is not None else "null"}, "reason": "{refund_reason}", "idempotency_key": "{idempotency_key}"}}'})
 
     return {"booking_id": booking_id, "status": "cancelled",
             "fare": fare, "hours_before_departure": round(float(hours_left), 1),
             "refund_amount": refund_amount, "refund_id": refund_id,
             "reason": refund_reason,
             "seat_released": True}
-    
-    # ---------- Public: search available seats ----------
+
+
+# ---------- Public: search available seats ----------
 
 @app.get("/search")
 def search_flights(origin: str, destination: str, date: str):
@@ -600,8 +723,23 @@ class WaitlistJoin(BaseModel):
 
 
 @app.post("/waitlist", status_code=201)
-def join_waitlist(req: WaitlistJoin):
+def join_waitlist(req: WaitlistJoin,
+                  idempotency_key: str = Header(..., alias="Idempotency-Key")):
     with engine.begin() as conn:
+        # IDEMPOTENCY: same waitlist key = do not create a second waitlist entry
+        existing = conn.execute(text("""
+            SELECT entity_id
+            FROM audit_log
+            WHERE action = 'join_waitlist'
+              AND after_state->>'idempotency_key' = :key
+        """), {"key": idempotency_key}).first()
+        if existing:
+            return {
+                "waitlist_id": existing.entity_id,
+                "idempotent_replay": True,
+                "message": "This waitlist request was already processed"
+            }
+
         flight = conn.execute(text("""
             SELECT id, status FROM flights WHERE id = :fid
         """), {"fid": req.flight_id}).first()
@@ -646,5 +784,43 @@ def join_waitlist(req: WaitlistJoin):
               AND joined_at <= (SELECT joined_at FROM waitlist WHERE id = :wid)
         """), {"fid": req.flight_id, "cls": req.seat_class, "wid": wl_id}).scalar()
 
+        conn.execute(text("""
+            INSERT INTO audit_log (actor, actor_role, action, entity_type, entity_id, after_state)
+            VALUES ('customer', 'ops_agent', 'join_waitlist', 'waitlist', :wid, :after)
+        """), {
+            "wid": wl_id,
+            "after": f'{{"flight_id": {req.flight_id}, "passenger_id": {req.passenger_id}, "seat_class": "{req.seat_class}", "position": {position}, "idempotency_key": "{idempotency_key}"}}'
+        })
+
     return {"waitlist_id": wl_id, "position": position,
             "message": f"Added to {req.seat_class} waitlist at position {position}"}
+
+
+# ---------- Public: seat map for a flight ----------
+
+@app.get("/flights/{flight_id}/seatmap")
+def get_seatmap(flight_id: int):
+    with engine.connect() as conn:
+        flight = conn.execute(text("""
+            SELECT id, flight_number FROM flights WHERE id = :fid
+        """), {"fid": flight_id}).first()
+        if not flight:
+            raise HTTPException(404, "Flight not found")
+
+        rows = conn.execute(text("""
+            SELECT seat_number, class, is_occupied
+            FROM seats
+            WHERE flight_id = :fid
+            ORDER BY class, seat_number
+        """), {"fid": flight_id}).fetchall()
+
+    return {
+        "flight_id": flight_id,
+        "flight_number": flight.flight_number,
+        "seats": [
+            {"seat_number": r.seat_number, "class": str(r.class_) if hasattr(r, 'class_') else r[1],
+             "is_occupied": r.is_occupied}
+            for r in rows
+        ],
+        "total_seats": len(rows)
+    }

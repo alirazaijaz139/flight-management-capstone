@@ -16,13 +16,16 @@ lock = threading.Lock()
 
 def book(seat_class: str, passenger_id: int):
     key = f"stress-{uuid.uuid4()}"          # unique key per attempt (real clients)
-    r = requests.post(f"{BASE}/bookings", json={
-        "flight_id": FLIGHT_ID,
-        "passenger_id": passenger_id,
-        "seat_class": seat_class,
-        "fare": "basic_economy",
-        "idempotency_key": key,
-    })
+    r = requests.post(
+        f"{BASE}/bookings",
+        headers={"Idempotency-Key": key},   # key now travels in the header
+        json={
+            "flight_id": FLIGHT_ID,
+            "passenger_id": passenger_id,
+            "seat_class": seat_class,
+            "fare": "basic_economy",
+        },
+    )
     with lock:
         results.append((r.status_code, r.json()))
 
