@@ -1,5 +1,8 @@
 import os
 import uuid
+import smtplib
+import logging
+from email.message import EmailMessage
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Header
 from pydantic import BaseModel, Field
@@ -13,6 +16,42 @@ engine = create_engine(
     pool_pre_ping=True,      # test each connection before using; reconnect if dead
     pool_recycle=300,        # refresh connections older than 5 minutes
 )
+
+logger = logging.getLogger("flight_management")
+
+
+# ---------- Transactional email (request-triggered — FastAPI owns this,
+# distinct from n8n's scheduled/background Gmail sends) ----------
+
+GMAIL_ADDRESS = os.getenv("GMAIL_ADDRESS")
+GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
+
+
+def send_transactional_email(to_addr: str | None, subject: str, body: str) -> bool:
+    """Best-effort transactional send via Gmail SMTP. Never raises — a booking
+    or cancellation must still succeed even if the email fails to send;
+    failures are logged for follow-up instead of rolling back the transaction."""
+    if not to_addr:
+        logger.warning("No recipient email on file; skipping send: %s", subject)
+        return False
+    if not GMAIL_ADDRESS or not GMAIL_APP_PASSWORD:
+        logger.warning("GMAIL_ADDRESS/GMAIL_APP_PASSWORD not configured; skipping send: %s", subject)
+        return False
+
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = GMAIL_ADDRESS
+    msg["To"] = to_addr
+    msg.set_content(body)
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
+            smtp.send_message(msg)
+        return True
+    except Exception as exc:
+        logger.error("Failed to send transactional email (%s): %s", subject, exc)
+        return False
 
 
 # ---------- Role tiers (file requirement: super-admin vs ops-agent rights) ----------
@@ -494,6 +533,31 @@ def confirm_booking(booking_id: int,
             "after": f'{{"status": "confirmed", "amount_paid": {float(row.price_paid)}, "idempotency_key": "{idempotency_key}"}}'
         })
 
+        # Details needed for the confirmation email
+        details = conn.execute(text("""
+            SELECT p.full_name, p.email, f.flight_number, f.origin, f.destination,
+                   f.departure_ts
+            FROM bookings b
+            JOIN passengers p ON p.id = b.passenger_id
+            JOIN flights f ON f.id = b.flight_id
+            WHERE b.id = :bid
+        """), {"bid": booking_id}).first()
+
+    if details:
+        send_transactional_email(
+            to_addr=details.email,
+            subject=f"Booking Confirmed — Flight {details.flight_number}",
+            body=(
+                f"Dear {details.full_name},\n\n"
+                f"Your booking is confirmed.\n\n"
+                f"Booking ID: {booking_id}\n"
+                f"Flight: {details.flight_number} ({details.origin} -> {details.destination})\n"
+                f"Departure: {details.departure_ts}\n"
+                f"Amount paid: {float(row.price_paid)}\n\n"
+                f"Flight Management Team"
+            ),
+        )
+
     return {"booking_id": booking_id, "status": "confirmed",
             "amount_paid": float(row.price_paid)}
 
@@ -659,6 +723,30 @@ def cancel_booking(booking_id: int,
         """), {"bid": booking_id,
                "before": f'{{"status": "{b.status}", "fare": "{fare}"}}',
                "after": f'{{"status": "cancelled", "refund": {refund_amount}, "refund_id": {refund_id if refund_id is not None else "null"}, "reason": "{refund_reason}", "idempotency_key": "{idempotency_key}"}}'})
+
+        # Details needed for the cancellation receipt email
+        details = conn.execute(text("""
+            SELECT p.full_name, p.email, f.flight_number
+            FROM bookings b
+            JOIN passengers p ON p.id = b.passenger_id
+            JOIN flights f ON f.id = b.flight_id
+            WHERE b.id = :bid
+        """), {"bid": booking_id}).first()
+
+    if details:
+        send_transactional_email(
+            to_addr=details.email,
+            subject=f"Cancellation Receipt — Flight {details.flight_number}",
+            body=(
+                f"Dear {details.full_name},\n\n"
+                f"Your booking has been cancelled.\n\n"
+                f"Booking ID: {booking_id}\n"
+                f"Flight: {details.flight_number}\n"
+                f"Fare type: {fare}\n"
+                f"Refund amount: {refund_amount} ({refund_reason})\n\n"
+                f"Flight Management Team"
+            ),
+        )
 
     return {"booking_id": booking_id, "status": "cancelled",
             "fare": fare, "hours_before_departure": round(float(hours_left), 1),

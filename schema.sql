@@ -13,7 +13,7 @@
 -- (e.g. 'held'::booking_status). Confirm/extend labels against actual
 -- CHECK/enum definitions in Supabase if any admin action rejects a value.
 
-CREATE TYPE booking_status AS ENUM ('held', 'confirmed', 'cancelled');
+CREATE TYPE booking_status AS ENUM ('held', 'confirmed', 'cancelled', 'expired');
 CREATE TYPE flight_status AS ENUM ('scheduled', 'cancelled');
 CREATE TYPE seat_class_type AS ENUM ('first', 'business', 'economy');
 CREATE TYPE refund_status AS ENUM ('pending', 'completed', 'rejected');
@@ -197,7 +197,7 @@ CREATE TABLE fraud_flags (
     reviewed      BOOLEAN NOT NULL DEFAULT false,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT chk_fraud_flags_score_range CHECK (score >= 0 AND score <= 1)
+    CONSTRAINT chk_fraud_flags_score_range CHECK (score >= 0 AND score <= 100)
 );
 
 CREATE INDEX idx_fraud_flags_reviewed ON fraud_flags(reviewed);
