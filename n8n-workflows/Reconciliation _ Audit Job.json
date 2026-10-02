@@ -1,0 +1,89 @@
+{
+  "name": "Reconciliation / Audit Job",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        -96
+      ],
+      "id": "261e7f16-a11e-4b35-8675-cd4a65008bfb",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    sc.flight_id,\n    sc.class AS seat_class,\n    sc.total_seats,\n    sc.available_seats,\n\n    (\n        SELECT COUNT(*)\n        FROM bookings b\n        WHERE b.flight_id = sc.flight_id\n          AND b.seat_class = sc.class\n          AND b.status IN ('held', 'confirmed')\n    ) AS booking_count,\n\n    (\n        sc.total_seats - sc.available_seats\n    ) AS calculated_booked,\n\n    (\n        (sc.total_seats - sc.available_seats) !=\n        (\n            SELECT COUNT(*)\n            FROM bookings b\n            WHERE b.flight_id = sc.flight_id\n              AND b.seat_class = sc.class\n              AND b.status IN ('held', 'confirmed')\n        )\n    ) AS has_inconsistency\n\nFROM seat_classes sc\nORDER BY sc.flight_id, sc.class;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -224,
+        -80
+      ],
+      "id": "058893ee-5df7-41fe-a7d3-4ab803703ab8",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "DvY8wZ8jAYJ3c8vn",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(item => item.json);\n\nconst inconsistent = rows.filter(\n    row => row.has_inconsistency === true\n);\n\nconst consistent = rows.filter(\n    row => row.has_inconsistency === false\n);\n\nreturn [\n    {\n        json: {\n            review_type: \"reconciliation_audit\",\n            checked_records: rows.length,\n            consistent_records: consistent.length,\n            inconsistent_records: inconsistent.length,\n            status: inconsistent.length > 0\n                ? \"INCONSISTENCIES_FOUND\"\n                : \"ALL_CONSISTENT\",\n\n            inconsistencies: inconsistent.map(row => ({\n                flight_id: row.flight_id,\n                seat_class: row.seat_class,\n                total_seats: row.total_seats,\n                available_seats: row.available_seats,\n                calculated_booked: row.calculated_booked,\n                actual_bookings: row.booking_count,\n                difference:\n                    row.calculated_booked - row.booking_count\n            })),\n\n            checked_at: new Date().toISOString()\n        }\n    }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        -64
+      ],
+      "id": "1ebed8fb-c55d-4bb8-9944-f7e1321424c0",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "2b2c3f3c-bfb4-41a7-8c88-54f9b5923a73",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b8ab251e49ba37ab583adef54fb410c5dd674ec36587a3983a61e62c12a1b253"
+  },
+  "nodeGroups": [],
+  "id": "0siHEAjdhq98dS0C",
+  "tags": []
+}

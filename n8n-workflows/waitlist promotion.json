@@ -1,0 +1,97 @@
+{
+  "name": "waitlist promotion.",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        -48
+      ],
+      "id": "c95b64e9-de96-47c7-8c99-6dd1bb77974a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH expired_offers AS (\n    UPDATE waitlist\n    SET status = 'expired'\n    WHERE status = 'offered'\n      AND offer_expires_at < NOW()\n    RETURNING\n        id,\n        flight_id,\n        seat_class\n),\nreleased_seats AS (\n    UPDATE seat_classes sc\n    SET available_seats = available_seats + 1\n    FROM expired_offers eo\n    WHERE sc.flight_id = eo.flight_id\n      AND sc.class = eo.seat_class\n    RETURNING\n        sc.flight_id,\n        sc.class,\n        sc.available_seats\n)\nSELECT\n    eo.id AS waitlist_id,\n    eo.flight_id,\n    eo.seat_class,\n    rs.available_seats\nFROM expired_offers eo\nJOIN released_seats rs\n    ON rs.flight_id = eo.flight_id\n   AND rs.class = eo.seat_class;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -80,
+        -64
+      ],
+      "id": "e2ae3aac-30f2-4771-9623-305d52b334ea",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "DvY8wZ8jAYJ3c8vn",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH next_waitlist AS (\n    SELECT\n        w.id,\n        w.flight_id,\n        w.passenger_id,\n        w.seat_class\n    FROM waitlist w\n    JOIN seat_classes sc\n      ON sc.flight_id = w.flight_id\n     AND sc.class = w.seat_class\n    WHERE w.status = 'waiting'\n      AND sc.available_seats > 0\n    ORDER BY w.joined_at ASC\n    LIMIT 1\n    FOR UPDATE SKIP LOCKED\n),\nreserve_seat AS (\n    UPDATE seat_classes sc\n    SET available_seats = sc.available_seats - 1\n    FROM next_waitlist nw\n    WHERE sc.flight_id = nw.flight_id\n      AND sc.class = nw.seat_class\n      AND sc.available_seats > 0\n    RETURNING sc.flight_id, sc.class\n)\nUPDATE waitlist w\nSET\n    status = 'offered',\n    offered_at = NOW(),\n    offer_expires_at = NOW() + INTERVAL '15 minutes'\nFROM next_waitlist nw\nJOIN reserve_seat rs\n  ON rs.flight_id = nw.flight_id\n AND rs.class = nw.seat_class\nWHERE w.id = nw.id\nRETURNING\n    w.id AS waitlist_id,\n    w.flight_id,\n    w.passenger_id,\n    w.seat_class,\n    w.status,\n    w.offered_at,\n    w.offer_expires_at;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        96,
+        -80
+      ],
+      "id": "05ab4b0d-1038-44cb-bc83-e65f364ddfcf",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "DvY8wZ8jAYJ3c8vn",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "bd0fa4ac-6f1d-4362-946a-4f1d571425cd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b8ab251e49ba37ab583adef54fb410c5dd674ec36587a3983a61e62c12a1b253"
+  },
+  "nodeGroups": [],
+  "id": "jv5PynVDABd92YAH",
+  "tags": []
+}

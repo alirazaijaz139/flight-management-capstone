@@ -1,0 +1,89 @@
+{
+  "name": "Historical / Batch Fraud-Pattern Review.",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        -112
+      ],
+      "id": "4776e17d-821b-44e0-8f79-08ca65c5cecd",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    id AS booking_id,\n    passenger_id,\n    flight_id,\n    seat_class,\n    fare,\n    status,\n    price_paid,\n    created_at\nFROM bookings\nWHERE created_at < NOW() - INTERVAL '1 day'\nORDER BY created_at ASC;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -240,
+        -112
+      ],
+      "id": "823b357e-8c2b-4c70-8f66-7b6d52e02e56",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "DvY8wZ8jAYJ3c8vn",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const bookings = $input.all().map(item => item.json);\n\nconst passengerStats = {};\nconst flightStats = {};\n\nfor (const booking of bookings) {\n    const passengerId = booking.passenger_id;\n    const flightId = booking.flight_id;\n\n    // Passenger statistics\n    if (!passengerStats[passengerId]) {\n        passengerStats[passengerId] = {\n            total_bookings: 0,\n            cancelled_bookings: 0,\n            booking_ids: []\n        };\n    }\n\n    passengerStats[passengerId].total_bookings++;\n    passengerStats[passengerId].booking_ids.push(booking.booking_id);\n\n    if (booking.status === \"cancelled\") {\n        passengerStats[passengerId].cancelled_bookings++;\n    }\n\n    // Flight statistics\n    if (!flightStats[flightId]) {\n        flightStats[flightId] = {\n            total_bookings: 0,\n            passenger_ids: []\n        };\n    }\n\n    flightStats[flightId].total_bookings++;\n    flightStats[flightId].passenger_ids.push(passengerId);\n}\n\nconst suspicious = [];\n\n// Pattern 1: many bookings by the same passenger\nfor (const [passengerId, stats] of Object.entries(passengerStats)) {\n    if (stats.total_bookings >= 3) {\n        suspicious.push({\n            pattern: \"HIGH_BOOKING_VOLUME\",\n            passenger_id: Number(passengerId),\n            booking_count: stats.total_bookings,\n            booking_ids: stats.booking_ids,\n            reason: \"Passenger has 3 or more historical bookings\"\n        });\n    }\n\n    // Pattern 2: repeated cancellations\n    if (stats.cancelled_bookings >= 2) {\n        suspicious.push({\n            pattern: \"REPEATED_CANCELLATIONS\",\n            passenger_id: Number(passengerId),\n            cancelled_count: stats.cancelled_bookings,\n            reason: \"Passenger has 2 or more cancelled bookings\"\n        });\n    }\n}\n\n// Pattern 3: many bookings on one flight\nfor (const [flightId, stats] of Object.entries(flightStats)) {\n    if (stats.total_bookings >= 4) {\n        suspicious.push({\n            pattern: \"HIGH_FLIGHT_BOOKING_VOLUME\",\n            flight_id: Number(flightId),\n            booking_count: stats.total_bookings,\n            passenger_ids: stats.passenger_ids,\n            reason: \"Flight has 4 or more historical bookings in the review set\"\n        });\n    }\n}\n\nreturn [\n    {\n        json: {\n            review_type: \"historical_batch_fraud_review\",\n            bookings_scanned: bookings.length,\n            suspicious_patterns_found: suspicious.length,\n            suspicious_patterns: suspicious,\n            reviewed_at: new Date().toISOString()\n        }\n    }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -112
+      ],
+      "id": "349e4c43-9495-4655-9c63-8d563aebddfa",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "14f27f34-a8be-4995-8e4a-54cd6ffe1217",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b8ab251e49ba37ab583adef54fb410c5dd674ec36587a3983a61e62c12a1b253"
+  },
+  "nodeGroups": [],
+  "id": "Kucw5ZUxPzTr7kYi",
+  "tags": []
+}

@@ -1,0 +1,173 @@
+{
+  "name": "Flight Check-In Reminder - Timezone Correct",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        -224
+      ],
+      "id": "82076e24-278e-42c0-b6d1-2d4f0f359400",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    b.id AS booking_id,\n    b.passenger_id,\n    b.flight_id,\n    b.seat_class,\n    b.status,\n\n    p.full_name,\n    p.email,\n\n    f.flight_number,\n    f.origin,\n    f.destination,\n    f.departure_ts,\n    f.arrival_ts,\n\n    CASE f.origin\n        WHEN 'LHR' THEN 'Europe/London'\n        WHEN 'DXB' THEN 'Asia/Dubai'\n        WHEN 'KHI' THEN 'Asia/Karachi'\n        WHEN 'LHE' THEN 'Asia/Karachi'\n        WHEN 'ISB' THEN 'Asia/Karachi'\n        ELSE 'UTC'\n    END AS origin_timezone,\n\n    CASE f.destination\n        WHEN 'LHR' THEN 'Europe/London'\n        WHEN 'DXB' THEN 'Asia/Dubai'\n        WHEN 'KHI' THEN 'Asia/Karachi'\n        WHEN 'LHE' THEN 'Asia/Karachi'\n        WHEN 'ISB' THEN 'Asia/Karachi'\n        ELSE 'UTC'\n    END AS destination_timezone,\n\n    to_char(\n        f.departure_ts AT TIME ZONE\n        CASE f.origin\n            WHEN 'LHR' THEN 'Europe/London'\n            WHEN 'DXB' THEN 'Asia/Dubai'\n            WHEN 'KHI' THEN 'Asia/Karachi'\n            WHEN 'LHE' THEN 'Asia/Karachi'\n            WHEN 'ISB' THEN 'Asia/Karachi'\n            ELSE 'UTC'\n        END,\n        'YYYY-MM-DD HH24:MI:SS'\n    ) AS departure_local_time,\n\n    to_char(\n        f.arrival_ts AT TIME ZONE\n        CASE f.destination\n            WHEN 'LHR' THEN 'Europe/London'\n            WHEN 'DXB' THEN 'Asia/Dubai'\n            WHEN 'KHI' THEN 'Asia/Karachi'\n            WHEN 'LHE' THEN 'Asia/Karachi'\n            WHEN 'ISB' THEN 'Asia/Karachi'\n            ELSE 'UTC'\n        END,\n        'YYYY-MM-DD HH24:MI:SS'\n    ) AS arrival_local_time\n\nFROM bookings b\n\nJOIN passengers p\n    ON p.id = b.passenger_id\n\nJOIN flights f\n    ON f.id = b.flight_id\n\nWHERE b.status = 'confirmed'\n  AND b.reminder_sent = false\n  AND f.status = 'scheduled'\n  AND f.departure_ts > NOW()\n  AND f.departure_ts <= NOW() + INTERVAL '24 hours'\n\nORDER BY f.departure_ts ASC;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -496,
+        -32
+      ],
+      "id": "4dec356f-6281-4d4a-b81b-b8ddd64d265e",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "DvY8wZ8jAYJ3c8vn",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const bookings = $input.all();\n\nconst now = new Date();\n\nreturn bookings.map(item => {\n    const b = item.json;\n\n    const departure = new Date(b.departure_ts);\n\n    const hoursUntilDeparture =\n        (departure.getTime() - now.getTime()) / (1000 * 60 * 60);\n\n    // Send reminder when departure is within 24 hours.\n    const reminderDue =\n        hoursUntilDeparture > 0 &&\n        hoursUntilDeparture <= 24;\n\n    return {\n        json: {\n            booking_id: b.booking_id,\n            passenger_id: b.passenger_id,\n            passenger_name: b.full_name,\n            email: b.email,\n\n            flight_number: b.flight_number,\n            origin: b.origin,\n            destination: b.destination,\n\n            origin_timezone: b.origin_timezone,\n            destination_timezone: b.destination_timezone,\n\n            departure_local_time: b.departure_local_time,\n            arrival_local_time: b.arrival_local_time,\n\n            hours_until_departure:\n                Math.round(hoursUntilDeparture * 100) / 100,\n\n            reminder_due: reminderDue,\n\n            reminder_type: \"check_in_reminder\"\n        }\n    };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        -224
+      ],
+      "id": "e0c3d295-1967-4ce7-9ada-ce2d8406fd2c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2dc86d48-172e-44a4-8613-9a9c828ced29",
+              "leftValue": "={{ $json.reminder_due }}",
+              "rightValue": "is true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -192,
+        -32
+      ],
+      "id": "78f7829b-feba-4a0f-8e72-337f2f7711be",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Check-in Reminder — {{ $json.flight_number }}",
+        "message": "=Hello {{ $json.passenger_name }},  This is a check-in reminder for your upcoming flight.  Flight: {{ $json.flight_number }} Route: {{ $json.origin }} → {{ $json.destination }}  Departure: {{ $json.departure_local_time }} Timezone: {{ $json.origin_timezone }}  Arrival: {{ $json.arrival_local_time }} Timezone: {{ $json.destination_timezone }}  Your flight departs in approximately {{ $json.hours_until_departure }} hours.  Please complete your check-in before departure.  Thank you, Flight Management System",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -64,
+        -224
+      ],
+      "id": "eea11660-e5a3-4cf2-940a-a3710c769c3f",
+      "name": "Send a message",
+      "webhookId": "c26b7116-53d7-4101-8cc5-3e01088370f8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "2KGSniAE93B0PkIt",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "9c178d78-2caf-47ae-93e1-464df57eeeaa",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b8ab251e49ba37ab583adef54fb410c5dd674ec36587a3983a61e62c12a1b253"
+  },
+  "nodeGroups": [],
+  "id": "VhSWXBFFikNxJlWj",
+  "tags": []
+}

@@ -1,0 +1,121 @@
+{
+  "name": "refund escalation after N days",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        -64
+      ],
+      "id": "d0e78281-2213-40dc-a37e-4e5483331e0b",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    r.id AS refund_id,\n    r.booking_id,\n    r.amount,\n    r.status,\n    r.created_at,\n    r.escalated\nFROM refunds r\nWHERE r.status = 'pending'\n  AND r.escalated = false\n  AND r.created_at < NOW() - INTERVAL '1 day'\nORDER BY r.created_at ASC;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -112,
+        -48
+      ],
+      "id": "a5e51a61-6a90-4945-af64-6dc1a7f476ab",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "DvY8wZ8jAYJ3c8vn",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const refunds = $input.all().map(item => item.json);\n\nreturn refunds.map(refund => ({\n    json: {\n        refund_id: refund.refund_id,\n        booking_id: refund.booking_id,\n        amount: refund.amount,\n        status: refund.status,\n        created_at: refund.created_at,\n        escalation_required: true,\n        escalation_reason: \"Refund has been pending for more than 1 day\",\n        escalated_at: new Date().toISOString()\n    }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        -64
+      ],
+      "id": "b17b5bab-7145-4cf8-bc17-0cbf2bea6625",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE refunds\nSET\n    escalated = true,\n    escalated_at = NOW()\nWHERE id = {{ $json.refund_id }}\n  AND status = 'pending'\n  AND escalated = false\nRETURNING\n    id AS refund_id,\n    booking_id,\n    amount,\n    status,\n    escalated,\n    escalated_at;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        368,
+        -64
+      ],
+      "id": "32ee876d-69ab-45e2-9241-cfb0bc3cecd0",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "DvY8wZ8jAYJ3c8vn",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "3438dff9-9f03-46eb-bceb-443c42d40f81",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b8ab251e49ba37ab583adef54fb410c5dd674ec36587a3983a61e62c12a1b253"
+  },
+  "nodeGroups": [],
+  "id": "970aFKaMt8iTtNsI",
+  "tags": []
+}
