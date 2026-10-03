@@ -703,7 +703,7 @@ def create_booking(req: BookingCreate,
             UPDATE seat_classes
             SET available_seats = available_seats - 1
             WHERE flight_id = :fid AND class = :cls AND available_seats >= 1
-            RETURNING id, base_price, booking_cutoff_minutes
+            RETURNING id, base_price, booking_cutoff_minutes, currency
         """), {"fid": req.flight_id, "cls": req.seat_class}).first()
 
         if not seat:
@@ -747,13 +747,14 @@ def create_booking(req: BookingCreate,
             INSERT INTO bookings (idempotency_key, flight_id, passenger_id,
                                   seat_class, seat_id, fare, price_paid, currency,
                                   status, hold_expires_at)
-            VALUES (:key, :fid, :pid, :cls, :sid, :fare, :price, 'USD',
+            VALUES (:key, :fid, :pid, :cls, :sid, :fare, :price, :cur,
                     'held', now() + interval '15 minutes')
             RETURNING id
         """), {"key": idempotency_key, "fid": req.flight_id,
                "pid": req.passenger_id, "cls": req.seat_class,
                "sid": assigned_seat_id,
-               "fare": req.fare, "price": seat.base_price}).scalar()
+               "fare": req.fare, "price": seat.base_price,
+               "cur": str(seat.currency).strip()}).scalar()
 
     return {"booking_id": booking_id, "status": "held",
             "price": float(seat.base_price),
@@ -1116,7 +1117,7 @@ def create_group_booking(req: GroupBookingCreate,
             UPDATE seat_classes
             SET available_seats = available_seats - :n
             WHERE flight_id = :fid AND class = :cls AND available_seats >= :n
-            RETURNING base_price
+            RETURNING base_price, currency
         """), {"n": n, "fid": req.flight_id, "cls": req.seat_class}).first()
 
         if not seat:
@@ -1135,12 +1136,13 @@ def create_group_booking(req: GroupBookingCreate,
                 INSERT INTO bookings (idempotency_key, flight_id, passenger_id,
                                       seat_class, fare, price_paid, currency,
                                       status, hold_expires_at, group_id)
-                VALUES (:key, :fid, :pid, :cls, :fare, :price, 'USD',
+                VALUES (:key, :fid, :pid, :cls, :fare, :price, :cur,
                         'held', now() + interval '15 minutes', :gid)
                 RETURNING id
             """), {"key": f"{idempotency_key}-p{i}", "fid": req.flight_id,
                    "pid": pid, "cls": req.seat_class, "fare": req.fare,
-                   "price": seat.base_price, "gid": group_id}).scalar()
+                   "price": seat.base_price, "cur": str(seat.currency).strip(),
+                   "gid": group_id}).scalar()
             booking_ids.append(bid)
 
     return {"group_id": group_id, "booking_ids": booking_ids,
