@@ -1,6 +1,9 @@
 import os
 import uuid
 import json
+import smtplib
+import logging
+from email.message import EmailMessage
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Header
 from pydantic import BaseModel, Field
@@ -14,6 +17,41 @@ engine = create_engine(
     pool_pre_ping=True,      # test each connection before using; reconnect if dead
     pool_recycle=300,        # refresh connections older than 5 minutes
 )
+
+logger = logging.getLogger("flight_management")
+
+
+# ---------- Transactional email (request-triggered — FastAPI owns this,
+# distinct from n8n's scheduled/background Gmail sends) ----------
+
+GMAIL_ADDRESS = os.getenv("GMAIL_ADDRESS")
+GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
+
+
+def send_transactional_email(to_addr: str | None, subject: str, body: str) -> bool:
+    """Best-effort transactional send via Gmail SMTP. Never raises — a booking
+    or cancellation must still succeed even if the email fails to send."""
+    if not to_addr:
+        logger.warning("No recipient email on file; skipping send: %s", subject)
+        return False
+    if not GMAIL_ADDRESS or not GMAIL_APP_PASSWORD:
+        logger.warning("GMAIL_ADDRESS/GMAIL_APP_PASSWORD not configured; skipping send: %s", subject)
+        return False
+
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = GMAIL_ADDRESS
+    msg["To"] = to_addr
+    msg.set_content(body)
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
+            smtp.send_message(msg)
+        return True
+    except Exception as exc:
+        logger.error("Failed to send transactional email (%s): %s", subject, exc)
+        return False
 
 
 # ---------- Role tiers (file requirement: super-admin vs ops-agent rights) ----------
@@ -146,14 +184,21 @@ def create_flight(flight: FlightCreate,
 
     return {"flight_id": flight_id, "message": f"Flight {flight.flight_number} created"}
 
+class FlightCancelOptions(BaseModel):
+    resolution: str = "refund"   # "refund" or "credit"
+    credit_validity_days: int = 180
 
 # ---------- Admin: cancel flight (super_admin only, idempotent via header) ----------
 
 @app.post("/admin/flights/{flight_id}/cancel")
 def cancel_flight(flight_id: int,
+                  opts: FlightCancelOptions = FlightCancelOptions(),
                   x_admin_role: str | None = Header(default=None),
                   idempotency_key: str = Header(..., alias="Idempotency-Key")):
     role = check_role(x_admin_role, "cancel_flight")
+
+    if opts.resolution not in ("refund", "credit"):
+        raise HTTPException(422, "resolution must be 'refund' or 'credit'")
 
     with engine.begin() as conn:
         if idempotency_key:
@@ -183,13 +228,29 @@ def cancel_flight(flight_id: int,
             WHERE id = :fid
         """), {"fid": flight_id})
 
-        refunds_created = conn.execute(text("""
-            INSERT INTO refunds (booking_id, amount, status, created_at)
-            SELECT b.id, b.price_paid, 'pending', now()
-            FROM bookings b
-            WHERE b.flight_id = :fid AND b.status = 'confirmed'
-            RETURNING id
+        confirmed_bookings = conn.execute(text("""
+            SELECT id, price_paid FROM bookings
+            WHERE flight_id = :fid AND status = 'confirmed'
         """), {"fid": flight_id}).fetchall()
+
+        refunds_created = []
+        for b in confirmed_bookings:
+            if opts.resolution == "credit":
+                rid = conn.execute(text("""
+                    INSERT INTO refunds (booking_id, amount, status, is_credit,
+                                        credit_expires_at, created_at)
+                    VALUES (:bid, :amt,'approved' , true,
+                            now() + (:days || ' days')::interval, now())
+                    RETURNING id
+                """), {"bid": b.id, "amt": b.price_paid,
+                       "days": opts.credit_validity_days}).scalar()
+            else:
+                rid = conn.execute(text("""
+                    INSERT INTO refunds (booking_id, amount, status, is_credit, created_at)
+                    VALUES (:bid, :amt, 'pending', false, now())
+                    RETURNING id
+                """), {"bid": b.id, "amt": b.price_paid}).scalar()
+            refunds_created.append(rid)
 
         key_json = f'"{idempotency_key}"' if idempotency_key else "null"
         conn.execute(text("""
@@ -199,13 +260,18 @@ def cancel_flight(flight_id: int,
                     :before, :after)
         """), {"role": role, "fid": flight_id,
                "before": f'{{"status": "{before_status}"}}',
-               "after": f'{{"status": "cancelled", "refunds_created": {len(refunds_created)}, "idempotency_key": {key_json}}}'})
+               "after": f'{{"status": "cancelled", "resolution": "{opts.resolution}", "refunds_created": {len(refunds_created)}, "idempotency_key": {key_json}}}'})
 
     return {"flight_id": flight_id,
             "flight_number": flight.flight_number,
             "status": "cancelled",
-            "refunds_created": len(refunds_created)}
-
+            "resolution": opts.resolution,
+            "refunds_created": len(refunds_created),
+            "message": (
+                f"{len(refunds_created)} travel credit(s) issued, valid {opts.credit_validity_days} days"
+                if opts.resolution == "credit"
+                else f"{len(refunds_created)} cash refund(s) created as pending"
+            )}
 
 # ---------- Admin: edit flight schedule (ops_agent allowed) ----------
 
@@ -597,6 +663,7 @@ class BookingCreate(BaseModel):
     passenger_id: int
     seat_class: str            # first / business / economy
     fare: str                  # basic_economy / flexible (your enum's labels)
+    requested_seat_number: str | None = None   # optional specific seat choice
 
 class ItineraryLeg(BaseModel):
     flight_id: int
@@ -642,6 +709,27 @@ def create_booking(req: BookingCreate,
         if not seat:
             raise HTTPException(409,
                 f"No {req.seat_class} seats available on this flight")
+                # FARE RESTRICTION: basic economy gets no seat choice (file requirement)
+        if req.requested_seat_number is not None and req.fare == 'basic_economy':
+            raise HTTPException(422,
+                "Basic economy fare does not allow seat selection; "
+                "a seat will be auto-assigned")
+
+        # If a specific seat was requested (flexible fare only), mark it occupied
+        assigned_seat_id = None
+        if req.requested_seat_number is not None:
+            seat_row = conn.execute(text("""
+                UPDATE seats
+                SET is_occupied = true
+                WHERE flight_id = :fid AND seat_number = :sn
+                  AND class = :cls AND is_occupied = false
+                RETURNING id
+            """), {"fid": req.flight_id, "sn": req.requested_seat_number,
+                   "cls": req.seat_class}).first()
+            if not seat_row:
+                raise HTTPException(409,
+                    f"Seat {req.requested_seat_number} is unavailable or does not exist")
+            assigned_seat_id = seat_row.id
 
         # CUTOFF CHECK: class-specific booking cutoff (e.g. First/Business allow later cutoff)
         minutes_left = conn.execute(text("""
@@ -657,13 +745,14 @@ def create_booking(req: BookingCreate,
         # 4. Create the booking as a HOLD with expiry (file requirement)
         booking_id = conn.execute(text("""
             INSERT INTO bookings (idempotency_key, flight_id, passenger_id,
-                                  seat_class, fare, price_paid, currency,
+                                  seat_class, seat_id, fare, price_paid, currency,
                                   status, hold_expires_at)
-            VALUES (:key, :fid, :pid, :cls, :fare, :price, 'USD',
+            VALUES (:key, :fid, :pid, :cls, :sid, :fare, :price, 'USD',
                     'held', now() + interval '15 minutes')
             RETURNING id
         """), {"key": idempotency_key, "fid": req.flight_id,
                "pid": req.passenger_id, "cls": req.seat_class,
+               "sid": assigned_seat_id,
                "fare": req.fare, "price": seat.base_price}).scalar()
 
     return {"booking_id": booking_id, "status": "held",
@@ -960,6 +1049,31 @@ def confirm_booking(booking_id: int,
             "after": f'{{"status": "confirmed", "amount_paid": {float(row.price_paid)}, "idempotency_key": "{idempotency_key}"}}'
         })
 
+        # Details needed for the confirmation email
+        details = conn.execute(text("""
+            SELECT p.full_name, p.email, f.flight_number, f.origin, f.destination,
+                   f.departure_ts
+            FROM bookings b
+            JOIN passengers p ON p.id = b.passenger_id
+            JOIN flights f ON f.id = b.flight_id
+            WHERE b.id = :bid
+        """), {"bid": booking_id}).first()
+
+    if details:
+        send_transactional_email(
+            to_addr=details.email,
+            subject=f"Booking Confirmed — Flight {details.flight_number}",
+            body=(
+                f"Dear {details.full_name},\n\n"
+                f"Your booking is confirmed.\n\n"
+                f"Booking ID: {booking_id}\n"
+                f"Flight: {details.flight_number} ({details.origin} -> {details.destination})\n"
+                f"Departure: {details.departure_ts}\n"
+                f"Amount paid: {float(row.price_paid)}\n\n"
+                f"Flight Management Team"
+            ),
+        )
+
     return {"booking_id": booking_id, "status": "confirmed",
             "amount_paid": float(row.price_paid)}
 
@@ -1126,11 +1240,145 @@ def cancel_booking(booking_id: int,
                "before": f'{{"status": "{b.status}", "fare": "{fare}"}}',
                "after": f'{{"status": "cancelled", "refund": {refund_amount}, "refund_id": {refund_id if refund_id is not None else "null"}, "reason": "{refund_reason}", "idempotency_key": "{idempotency_key}"}}'})
 
+        # Details needed for the cancellation receipt email
+        details = conn.execute(text("""
+            SELECT p.full_name, p.email, f.flight_number
+            FROM bookings b
+            JOIN passengers p ON p.id = b.passenger_id
+            JOIN flights f ON f.id = b.flight_id
+            WHERE b.id = :bid
+        """), {"bid": booking_id}).first()
+
+    if details:
+        send_transactional_email(
+            to_addr=details.email,
+            subject=f"Cancellation Receipt — Flight {details.flight_number}",
+            body=(
+                f"Dear {details.full_name},\n\n"
+                f"Your booking has been cancelled.\n\n"
+                f"Booking ID: {booking_id}\n"
+                f"Flight: {details.flight_number}\n"
+                f"Fare type: {fare}\n"
+                f"Refund amount: {refund_amount} ({refund_reason})\n\n"
+                f"Flight Management Team"
+            ),
+        )
+
     return {"booking_id": booking_id, "status": "cancelled",
             "fare": fare, "hours_before_departure": round(float(hours_left), 1),
             "refund_amount": refund_amount, "refund_id": refund_id,
             "reason": refund_reason,
             "seat_released": True}
+
+
+# ---------- Booking: partial cancellation inside a group ----------
+
+class PartialCancel(BaseModel):
+    booking_ids: list[int]     # which passengers' bookings to cancel
+
+
+def compute_refund(fare: str, was_paid: bool, hours_left: float, price_paid: float):
+    """Same fare-type rules as cancel_booking, reusable per booking."""
+    if not was_paid:
+        return 0, "no payment taken (hold released)"
+    if fare == 'flexible':
+        if hours_left > 24:
+            return float(price_paid), "flexible fare, >24h before departure: full refund"
+        return 0, "flexible fare, <24h before departure: no refund"
+    if fare == 'basic_economy':
+        return 0, "basic economy: non-refundable"
+    raise HTTPException(422, f"No cancellation rule for fare '{fare}'")
+
+
+@app.post("/bookings/group/{group_id}/cancel-partial")
+def cancel_group_partial(group_id: str, req: PartialCancel,
+                         idempotency_key: str = Header(..., alias="Idempotency-Key")):
+    ids = list(set(req.booking_ids))
+    if not ids:
+        raise HTTPException(422, "Provide at least one booking_id")
+
+    with engine.begin() as conn:
+        # IDEMPOTENCY: same key = do not cancel the same batch twice
+        existing = conn.execute(text("""
+            SELECT after_state FROM audit_log
+            WHERE action = 'cancel_group_partial'
+              AND after_state->>'idempotency_key' = :key
+        """), {"key": idempotency_key}).first()
+        if existing:
+            return {"group_id": group_id, "idempotent_replay": True,
+                    "message": "This partial-cancellation request was already processed"}
+
+        rows = conn.execute(text("""
+            SELECT b.id, b.status, b.fare, b.seat_class, b.price_paid,
+                   b.flight_id, f.departure_ts
+            FROM bookings b
+            JOIN flights f ON f.id = b.flight_id
+            WHERE b.group_id = :gid AND b.id = ANY(:ids)
+            FOR UPDATE OF b
+        """), {"gid": group_id, "ids": ids}).fetchall()
+
+        if len(rows) != len(ids):
+            raise HTTPException(404,
+                "One or more booking_ids do not belong to this group")
+
+        hours_left = float(conn.execute(text("""
+            SELECT EXTRACT(EPOCH FROM (:dep)::timestamptz - now()) / 3600
+        """), {"dep": rows[0].departure_ts}).scalar())
+
+        results = []
+        total_refund = 0.0
+        released = 0
+
+        for b in rows:
+            if b.status not in ('held', 'confirmed'):
+                raise HTTPException(409,
+                    f"Booking {b.id} is '{b.status}' and cannot be cancelled")
+
+            refund_amount, reason = compute_refund(
+                str(b.fare), b.status == 'confirmed', hours_left, b.price_paid)
+
+            conn.execute(text("""
+                UPDATE bookings SET status = 'cancelled', updated_at = now()
+                WHERE id = :bid
+            """), {"bid": b.id})
+
+            refund_id = None
+            if refund_amount > 0:
+                refund_id = conn.execute(text("""
+                    INSERT INTO refunds (booking_id, amount, status, created_at)
+                    VALUES (:bid, :amt, 'pending', now())
+                    RETURNING id
+                """), {"bid": b.id, "amt": refund_amount}).scalar()
+
+            total_refund += refund_amount
+            released += 1
+            results.append({"booking_id": b.id, "refund_amount": refund_amount,
+                            "refund_id": refund_id, "reason": reason})
+
+        # Release all freed seats in one atomic update (all bookings share flight+class)
+        conn.execute(text("""
+            UPDATE seat_classes SET available_seats = available_seats + :n
+            WHERE flight_id = :fid AND class = :cls
+        """), {"n": released, "fid": rows[0].flight_id, "cls": rows[0].seat_class})
+
+        remaining = conn.execute(text("""
+            SELECT count(*) FROM bookings
+            WHERE group_id = :gid AND status IN ('held', 'confirmed')
+        """), {"gid": group_id}).scalar()
+
+        conn.execute(text("""
+            INSERT INTO audit_log (actor, actor_role, action, entity_type,
+                                   entity_id, before_state, after_state)
+            VALUES ('customer', 'ops_agent', 'cancel_group_partial', 'booking',
+                    :bid, :before, :after)
+        """), {"bid": rows[0].id,
+               "before": f'{{"group_id": "{group_id}", "booking_ids": {ids}}}',
+               "after": f'{{"cancelled_count": {released}, "total_refund": {total_refund}, "idempotency_key": "{idempotency_key}"}}'})
+
+    return {"group_id": group_id, "cancelled": results,
+            "seats_released": released,
+            "total_refund": total_refund,
+            "remaining_active_bookings": remaining}
 
 
 # ---------- Public: search available seats ----------

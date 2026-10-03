@@ -16,7 +16,7 @@
 CREATE TYPE booking_status AS ENUM ('held', 'confirmed', 'cancelled', 'expired');
 CREATE TYPE flight_status AS ENUM ('scheduled', 'cancelled');
 CREATE TYPE seat_class_type AS ENUM ('first', 'business', 'economy');
-CREATE TYPE refund_status AS ENUM ('pending', 'completed', 'rejected');
+CREATE TYPE refund_status AS ENUM ('pending', 'approved', 'processed', 'rejected', 'escalated');
 CREATE TYPE admin_role AS ENUM ('super_admin', 'ops_agent');
 -- fare (bookings.fare), class (seats.class) reuse seat_class_type /
 -- a fare-specific enum — confirm exact type names via:
