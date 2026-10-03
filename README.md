@@ -45,3 +45,5 @@ justification, conflict resolution, autonomy boundaries.
 ## n8n workflows
 Exported JSONs in `/n8n-workflows` (import into any n8n instance;
 requires Postgres, Gmail, Pinecone, Gemini credentials).
+
+##COMPLETE it.
