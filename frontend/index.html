@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flight Management — Book a Flight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B1F3A;
+    --navy-light:#13294F;
+    --amber:#F2A541;
+    --cream:#F7F5F0;
+    --slate:#4A5568;
+    --green:#2F9E68;
+    --red:#C94A3B;
+    --line:#E3E0D8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--cream); color:var(--navy);
+    font-family:'Inter',system-ui,sans-serif; line-height:1.5;
+  }
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif; margin:0; letter-spacing:-0.01em;}
+  a{color:inherit;}
+
+  header{
+    background:var(--navy); color:var(--cream);
+    padding:20px 24px; display:flex; justify-content:space-between; align-items:center;
+  }
+  header .brand{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.15rem;}
+  header .brand span{color:var(--amber);}
+  header nav a{text-decoration:none; font-size:.9rem; color:#CBD3E1; margin-left:18px;}
+  header nav a:hover{color:var(--cream);}
+
+  .hero{
+    background:linear-gradient(180deg, var(--navy) 0%, var(--navy-light) 100%);
+    color:var(--cream); padding:56px 24px 72px;
+  }
+  .hero-inner{max-width:760px;}
+  .hero h1{font-size:2.25rem; font-weight:700; max-width:14ch;}
+  .hero p{color:#B9C2D4; max-width:48ch; margin-top:10px; font-size:1rem;}
+
+  .search-card{
+    max-width:900px; margin:-44px auto 0; background:#fff; border:1px solid var(--line);
+    border-radius:6px; padding:22px; box-shadow:0 12px 32px rgba(11,31,58,0.14);
+  }
+  .grid{display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:14px; align-items:end;}
+  @media (max-width:760px){.grid{grid-template-columns:1fr 1fr;}}
+  label{display:block; font-size:.78rem; color:var(--slate); margin-bottom:5px; font-weight:500;}
+  input, select{
+    width:100%; padding:10px 11px; border:1px solid var(--line); border-radius:4px;
+    font-size:.92rem; font-family:inherit; background:#fff; color:var(--navy);
+  }
+  input:focus, select:focus{outline:2px solid var(--amber); outline-offset:1px;}
+  button{
+    font-family:inherit; cursor:pointer; border:none; border-radius:4px;
+    font-weight:600; font-size:.9rem; transition:transform .08s ease;
+  }
+  button:active{transform:scale(.98);}
+  .btn-primary{background:var(--amber); color:var(--navy); padding:11px 20px;}
+  .btn-primary:hover{background:#e0973a;}
+  .btn-secondary{background:var(--navy); color:#fff; padding:9px 16px;}
+  .btn-secondary:hover{background:var(--navy-light);}
+  .btn-ghost{background:transparent; color:var(--red); padding:8px 12px; border:1px solid var(--red);}
+  .btn-ghost:hover{background:#fdf0ee;}
+  .btn-small{padding:7px 12px; font-size:.82rem;}
+
+  main{max-width:900px; margin:0 auto; padding:40px 24px 80px;}
+  .section-title{font-size:1.15rem; margin-bottom:14px; font-weight:600;}
+
+  .flight-card{
+    border:1px solid var(--line); border-radius:6px; padding:18px 20px; margin-bottom:12px; background:#fff;
+  }
+  .flight-top{display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px;}
+  .flight-route{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1.05rem;}
+  .flight-meta{color:var(--slate); font-size:.85rem; margin-top:2px;}
+  .class-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 0; border-top:1px solid var(--line); margin-top:12px;
+  }
+  .class-name{text-transform:capitalize; font-weight:500;}
+  .class-price{font-family:'Space Grotesk',sans-serif; font-weight:600;}
+  .class-seats{color:var(--slate); font-size:.8rem;}
+
+  .empty, .status{color:var(--slate); font-size:.92rem; padding:14px 0;}
+  .status.error{color:var(--red);}
+  .status.ok{color:var(--green);}
+
+  dialog{
+    border:none; border-radius:8px; padding:0; max-width:420px; width:92%;
+    box-shadow:0 20px 60px rgba(11,31,58,.3);
+  }
+  dialog::backdrop{background:rgba(11,31,58,.5);}
+  .dialog-inner{padding:24px;}
+  .dialog-inner h3{margin-bottom:4px;}
+  .dialog-inner .sub{color:var(--slate); font-size:.85rem; margin-bottom:16px;}
+  .field{margin-bottom:14px;}
+  .dialog-actions{display:flex; gap:10px; margin-top:18px;}
+  .close-x{position:absolute; top:14px; right:16px; background:none; color:var(--slate); font-size:1.1rem; padding:4px;}
+
+  .booking-result{
+    border:1px solid var(--green); background:#F1FAF5; border-radius:6px;
+    padding:16px 18px; margin-top:10px; font-size:.9rem;
+  }
+  .booking-result strong{font-family:'Space Grotesk',sans-serif;}
+  .booking-result .row{display:flex; justify-content:space-between; padding:4px 0;}
+
+  footer{text-align:center; color:var(--slate); font-size:.8rem; padding:24px; border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Flight<span>Mgmt</span></div>
+  <nav>
+    <a href="index.html">Book a flight</a>
+    <a href="admin.html">Admin</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="hero-inner">
+    <h1>Search, hold, and confirm a seat in one pass.</h1>
+    <p>Live availability, atomic seat holds, and fare-aware cancellation — pulled straight from the booking engine.</p>
+  </div>
+</div>
+
+<div class="search-card">
+  <form id="search-form" class="grid">
+    <div>
+      <label for="origin">From</label>
+      <input id="origin" placeholder="e.g. LHR" required>
+    </div>
+    <div>
+      <label for="destination">To</label>
+      <input id="destination" placeholder="e.g. DXB" required>
+    </div>
+    <div>
+      <label for="date">Date</label>
+      <input id="date" type="date" required>
+    </div>
+    <button type="submit" class="btn-primary">Search</button>
+  </form>
+</div>
+
+<main>
+  <div id="results">
+    <p class="empty">Search a route and date to see available flights.</p>
+  </div>
+</main>
+
+<!-- Booking dialog -->
+<dialog id="book-dialog">
+  <div class="dialog-inner" style="position:relative;">
+    <button class="close-x" onclick="document.getElementById('book-dialog').close()">✕</button>
+    <h3 id="bd-title">Book this seat</h3>
+    <div class="sub" id="bd-sub"></div>
+    <form id="book-form">
+      <div class="field">
+        <label for="passenger_id">Passenger ID</label>
+        <input id="passenger_id" type="number" placeholder="e.g. 1" required>
+      </div>
+      <div class="field">
+        <label for="fare">Fare type</label>
+        <select id="fare">
+          <option value="basic_economy">Basic economy — no seat choice, non-refundable</option>
+          <option value="flexible">Flexible — seat choice, refundable &gt;24h out</option>
+        </select>
+      </div>
+      <div class="field" id="seat-field" style="display:none;">
+        <label for="seat_number">Requested seat (optional, flexible only)</label>
+        <input id="seat_number" placeholder="e.g. E3">
+      </div>
+      <div class="dialog-actions">
+        <button type="submit" class="btn-primary" style="flex:1;">Hold seat</button>
+      </div>
+    </form>
+    <div id="book-status"></div>
+  </div>
+</dialog>
+
+<footer>Flight Management System — booking engine demo</footer>
+
+<script>
+const API_BASE = "https://flight-management-capstone.onrender.com";
+
+const searchForm = document.getElementById('search-form');
+const results = document.getElementById('results');
+const bookDialog = document.getElementById('book-dialog');
+const bookForm = document.getElementById('book-form');
+const bookStatus = document.getElementById('book-status');
+const fareSelect = document.getElementById('fare');
+const seatField = document.getElementById('seat-field');
+
+let selectedFlight = null;
+let selectedClass = null;
+
+fareSelect.addEventListener('change', () => {
+  seatField.style.display = fareSelect.value === 'flexible' ? 'block' : 'none';
+});
+
+function uid(prefix) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+searchForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const origin = document.getElementById('origin').value.trim().toUpperCase();
+  const destination = document.getElementById('destination').value.trim().toUpperCase();
+  const date = document.getElementById('date').value;
+
+  results.innerHTML = '<p class="status">Searching…</p>';
+
+  try {
+    const res = await fetch(`${API_BASE}/search?origin=${origin}&destination=${destination}&date=${date}`);
+    const data = await res.json();
+
+    if (!data.flights || data.flights.length === 0) {
+      results.innerHTML = `<p class="empty">${data.message || 'No flights found for this route and date.'}</p>`;
+      return;
+    }
+
+    results.innerHTML = `<div class="section-title">${data.count} flight${data.count === 1 ? '' : 's'} found</div>`;
+    data.flights.forEach(f => results.appendChild(renderFlightCard(f)));
+
+  } catch (err) {
+    results.innerHTML = `<p class="status error">Couldn't reach the booking service. It may be waking up — try again in 30 seconds.</p>`;
+  }
+});
+
+function renderFlightCard(flight) {
+  const card = document.createElement('div');
+  card.className = 'flight-card';
+
+  const dep = new Date(flight.departure_ts);
+  const arr = new Date(flight.arrival_ts);
+  const fmt = d => d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+  card.innerHTML = `
+    <div class="flight-top">
+      <div>
+        <div class="flight-route">${flight.origin} → ${flight.destination}</div>
+        <div class="flight-meta">Flight ${flight.flight_number} · Departs ${fmt(dep)} · Arrives ${fmt(arr)}</div>
+      </div>
+    </div>
+    <div class="classes"></div>
+  `;
+
+  const classesWrap = card.querySelector('.classes');
+  flight.classes.forEach(c => {
+    const row = document.createElement('div');
+    row.className = 'class-row';
+    row.innerHTML = `
+      <div>
+        <div class="class-name">${c.class}</div>
+        <div class="class-seats">${c.available_seats} seat${c.available_seats === 1 ? '' : 's'} left</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div class="class-price">${c.currency} ${c.price.toFixed(2)}</div>
+        <button class="btn-secondary btn-small">Select</button>
+      </div>
+    `;
+    row.querySelector('button').addEventListener('click', () => openBookingDialog(flight, c));
+    classesWrap.appendChild(row);
+  });
+
+  return card;
+}
+
+function openBookingDialog(flight, flightClass) {
+  selectedFlight = flight;
+  selectedClass = flightClass;
+  document.getElementById('bd-title').textContent = `${flight.origin} → ${flight.destination}, ${flightClass.class}`;
+  document.getElementById('bd-sub').textContent = `Flight ${flight.flight_number} · ${flightClass.currency} ${flightClass.price.toFixed(2)} · held for 15 minutes once requested`;
+  bookStatus.innerHTML = '';
+  bookForm.style.display = 'block';
+  bookForm.reset();
+  seatField.style.display = 'none';
+  bookDialog.showModal();
+}
+
+bookForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const passenger_id = parseInt(document.getElementById('passenger_id').value, 10);
+  const fare = fareSelect.value;
+  const seat_number = document.getElementById('seat_number').value.trim();
+
+  const body = {
+    flight_id: selectedFlight.flight_id,
+    passenger_id,
+    seat_class: selectedClass.class,
+    fare,
+  };
+  if (fare === 'flexible' && seat_number) {
+    body.requested_seat_number = seat_number;
+  }
+
+  bookStatus.innerHTML = '<p class="status">Holding seat…</p>';
+
+  try {
+    const res = await fetch(`${API_BASE}/bookings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': uid('web-book'),
+      },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      bookStatus.innerHTML = `<p class="status error">${data.detail || 'Could not hold that seat.'}</p>`;
+      return;
+    }
+
+    bookForm.style.display = 'none';
+    bookStatus.innerHTML = renderHoldResult(data);
+    wireConfirmCancel(data.booking_id);
+
+  } catch (err) {
+    bookStatus.innerHTML = `<p class="status error">Network error — please try again.</p>`;
+  }
+});
+
+function renderHoldResult(data) {
+  return `
+    <div class="booking-result">
+      <div class="row"><span>Booking</span><strong>#${data.booking_id}</strong></div>
+      <div class="row"><span>Status</span><strong>${data.status}</strong></div>
+      <div class="row"><span>Price</span><strong>${data.price}</strong></div>
+      <div class="row"><span>Hold expires in</span><strong>${data.hold_expires_in_minutes} min</strong></div>
+      <div class="dialog-actions">
+        <button id="confirm-btn" class="btn-primary" style="flex:1;">Confirm payment</button>
+        <button id="cancel-btn" class="btn-ghost">Cancel</button>
+      </div>
+    </div>
+  `;
+}
+
+function wireConfirmCancel(bookingId) {
+  document.getElementById('confirm-btn').addEventListener('click', async () => {
+    bookStatus.innerHTML = '<p class="status">Confirming…</p>';
+    try {
+      const res = await fetch(`${API_BASE}/bookings/${bookingId}/confirm`, {
+        method: 'POST',
+        headers: { 'Idempotency-Key': uid('web-confirm') },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        bookStatus.innerHTML = `<p class="status error">${data.detail || 'Could not confirm.'}</p>`;
+        return;
+      }
+      bookStatus.innerHTML = `<p class="status ok">Booking #${data.booking_id} confirmed — ${data.amount_paid} paid. A confirmation email is on its way.</p>`;
+    } catch {
+      bookStatus.innerHTML = `<p class="status error">Network error — please try again.</p>`;
+    }
+  });
+
+  document.getElementById('cancel-btn').addEventListener('click', async () => {
+    bookStatus.innerHTML = '<p class="status">Cancelling…</p>';
+    try {
+      const res = await fetch(`${API_BASE}/bookings/${bookingId}/cancel`, {
+        method: 'POST',
+        headers: { 'Idempotency-Key': uid('web-cancel') },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        bookStatus.innerHTML = `<p class="status error">${data.detail || 'Could not cancel.'}</p>`;
+        return;
+      }
+      bookStatus.innerHTML = `<p class="status ok">Booking #${data.booking_id} cancelled — ${data.reason}.</p>`;
+    } catch {
+      bookStatus.innerHTML = `<p class="status error">Network error — please try again.</p>`;
+    }
+  });
+}
+</script>
+</body>
+</html>

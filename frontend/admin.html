@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flight Management — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B1F3A; --navy-light:#13294F; --amber:#F2A541; --cream:#F7F5F0;
+    --slate:#4A5568; --green:#2F9E68; --red:#C94A3B; --line:#E3E0D8;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--cream); color:var(--navy); font-family:'Inter',system-ui,sans-serif; line-height:1.5;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif; margin:0; letter-spacing:-0.01em;}
+
+  header{background:var(--navy); color:var(--cream); padding:20px 24px; display:flex; justify-content:space-between; align-items:center;}
+  header .brand{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.15rem;}
+  header .brand span{color:var(--amber);}
+  header nav a{text-decoration:none; font-size:.9rem; color:#CBD3E1; margin-left:18px;}
+  header nav a:hover{color:var(--cream);}
+
+  .bar{background:var(--navy-light); color:#CBD3E1; padding:12px 24px; font-size:.85rem; display:flex; gap:16px; align-items:center; flex-wrap:wrap;}
+  .bar label{font-size:.78rem; color:#9FB0C9;}
+  .bar select, .bar input{padding:6px 8px; border-radius:4px; border:1px solid #2A4066; background:#0F2546; color:#fff; font-size:.85rem;}
+
+  main{max-width:980px; margin:0 auto; padding:32px 24px 80px; display:grid; gap:28px;}
+  @media(min-width:860px){ main{grid-template-columns: 1fr 1fr;} .wide{grid-column:1/-1;} }
+
+  .panel{background:#fff; border:1px solid var(--line); border-radius:6px; padding:22px;}
+  .panel h2{font-size:1.05rem; margin-bottom:4px;}
+  .panel .sub{color:var(--slate); font-size:.82rem; margin-bottom:16px;}
+
+  label{display:block; font-size:.78rem; color:var(--slate); margin-bottom:5px; font-weight:500;}
+  input, select{width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:4px; font-size:.88rem; font-family:inherit; background:#fff; color:var(--navy);}
+  input:focus, select:focus{outline:2px solid var(--amber); outline-offset:1px;}
+  .field{margin-bottom:12px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+
+  .seat-class-row{display:grid; grid-template-columns: 1fr 70px 90px auto; gap:8px; align-items:end; margin-bottom:8px;}
+  .seat-class-row button{padding:9px; background:#FBEAE6; color:var(--red); border:1px solid var(--red);}
+
+  button{font-family:inherit; cursor:pointer; border:none; border-radius:4px; font-weight:600; font-size:.88rem; transition:transform .08s ease;}
+  button:active{transform:scale(.98);}
+  .btn-primary{background:var(--amber); color:var(--navy); padding:10px 18px; width:100%;}
+  .btn-primary:hover{background:#e0973a;}
+  .btn-secondary{background:var(--navy); color:#fff; padding:8px 14px;}
+  .btn-secondary:hover{background:var(--navy-light);}
+  .btn-outline{background:#fff; color:var(--navy); border:1px solid var(--line); padding:8px 14px;}
+  .btn-add{background:#EEF1F6; color:var(--navy); padding:8px; width:100%; margin-bottom:14px;}
+
+  .status{font-size:.86rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none;}
+  .status.ok{display:block; background:#F1FAF5; color:var(--green); border:1px solid var(--green);}
+  .status.error{display:block; background:#FDF0EE; color:var(--red); border:1px solid var(--red);}
+
+  table{width:100%; border-collapse:collapse; font-size:.85rem; margin-top:12px;}
+  th{text-align:left; color:var(--slate); font-weight:500; font-size:.75rem; text-transform:uppercase; letter-spacing:.03em; padding:6px 8px; border-bottom:1px solid var(--line);}
+  td{padding:7px 8px; border-bottom:1px solid #EFEDE6;}
+
+  .seatmap{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;}
+  .seat{width:38px; height:34px; display:flex; align-items:center; justify-content:center; font-size:.72rem;
+    border-radius:4px; border:1px solid var(--line); font-family:'Space Grotesk',sans-serif; font-weight:600;}
+  .seat.free{background:#F1FAF5; color:var(--green); border-color:var(--green);}
+  .seat.taken{background:#FDF0EE; color:var(--red); border-color:var(--red);}
+
+  footer{text-align:center; color:var(--slate); font-size:.8rem; padding:24px; border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Flight<span>Mgmt</span> — Admin</div>
+  <nav><a href="index.html">Book a flight</a> <a href="admin.html">Admin</a></nav>
+</header>
+
+<div class="bar">
+  <div>
+    <label for="role">Role</label>
+    <select id="role">
+      <option value="super_admin">super_admin</option>
+      <option value="ops_agent">ops_agent</option>
+    </select>
+  </div>
+  <div style="color:#9FB0C9;">super_admin can create and cancel flights · ops_agent is read/schedule-only</div>
+</div>
+
+<main>
+
+  <!-- Create flight -->
+  <div class="panel">
+    <h2>Create a flight</h2>
+    <div class="sub">Seat totals must add up to the declared capacity; the seat map generates automatically.</div>
+    <form id="create-form">
+      <div class="row2">
+        <div class="field"><label for="flight_number">Flight number</label><input id="flight_number" required placeholder="e.g. UK205"></div>
+        <div class="field"><label for="total_capacity">Total capacity</label><input id="total_capacity" type="number" required placeholder="e.g. 100"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="origin">Origin</label><input id="origin" required placeholder="LHR"></div>
+        <div class="field"><label for="destination">Destination</label><input id="destination" required placeholder="DXB"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="departure_ts">Departure</label><input id="departure_ts" type="datetime-local" required></div>
+        <div class="field"><label for="arrival_ts">Arrival</label><input id="arrival_ts" type="datetime-local" required></div>
+      </div>
+
+      <label style="margin-top:4px;">Seat classes</label>
+      <div id="seat-classes"></div>
+      <button type="button" class="btn-add" id="add-class">+ Add seat class</button>
+
+      <button type="submit" class="btn-primary">Create flight</button>
+      <div id="create-status" class="status"></div>
+    </form>
+  </div>
+
+  <!-- Cancel flight -->
+  <div class="panel">
+    <h2>Cancel a flight</h2>
+    <div class="sub">Choose cash refund or travel credit for confirmed passengers.</div>
+    <div class="field"><label for="cancel_flight_id">Flight ID</label><input id="cancel_flight_id" type="number" placeholder="e.g. 13"></div>
+    <div class="field">
+      <label for="resolution">Resolution</label>
+      <select id="resolution">
+        <option value="refund">Cash refund</option>
+        <option value="credit">Travel credit</option>
+      </select>
+    </div>
+    <div class="field" id="credit-days-field" style="display:none;">
+      <label for="credit_days">Credit validity (days)</label>
+      <input id="credit_days" type="number" value="180">
+    </div>
+    <button class="btn-secondary" id="cancel-flight-btn" style="width:100%;">Cancel flight</button>
+    <div id="cancel-status" class="status"></div>
+  </div>
+
+  <!-- Seat map -->
+  <div class="panel wide">
+    <h2>Seat map lookup</h2>
+    <div class="sub">See which seats are occupied for a given flight.</div>
+    <div class="row2" style="max-width:360px;">
+      <div class="field"><label for="seatmap_flight_id">Flight ID</label><input id="seatmap_flight_id" type="number" placeholder="e.g. 13"></div>
+      <button class="btn-outline" id="seatmap-btn" style="align-self:end; height:38px;">Load seat map</button>
+    </div>
+    <div id="seatmap-result"></div>
+  </div>
+
+</main>
+
+<footer>Flight Management System — admin console</footer>
+
+<script>
+const API_BASE = "https://flight-management-capstone.onrender.com";
+
+function uid(prefix) { return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
+function roleHeader() { return document.getElementById('role').value; }
+function toIsoZ(localDatetimeValue) {
+  if (!localDatetimeValue) return null;
+  return new Date(localDatetimeValue).toISOString();
+}
+function showStatus(el, message, ok) {
+  el.textContent = message;
+  el.className = 'status ' + (ok ? 'ok' : 'error');
+}
+
+/* ---------- Seat class rows ---------- */
+const seatClassesWrap = document.getElementById('seat-classes');
+function addSeatClassRow(className = '', seats = '', price = '') {
+  const row = document.createElement('div');
+  row.className = 'seat-class-row';
+  row.innerHTML = `
+    <div><select class="sc-class">
+      <option value="first">first</option>
+      <option value="business">business</option>
+      <option value="economy" selected>economy</option>
+    </select></div>
+    <div><input class="sc-seats" type="number" placeholder="seats" value="${seats}"></div>
+    <div><input class="sc-price" type="number" placeholder="price" value="${price}"></div>
+    <button type="button">✕</button>
+  `;
+  row.querySelector('.sc-class').value = className || 'economy';
+  row.querySelector('button').addEventListener('click', () => row.remove());
+  seatClassesWrap.appendChild(row);
+}
+document.getElementById('add-class').addEventListener('click', () => addSeatClassRow());
+addSeatClassRow('economy', 50, 100);
+
+/* ---------- Create flight ---------- */
+document.getElementById('create-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const statusEl = document.getElementById('create-status');
+
+  const seat_classes = Array.from(seatClassesWrap.children).map(row => ({
+    class_name: row.querySelector('.sc-class').value,
+    total_seats: parseInt(row.querySelector('.sc-seats').value, 10),
+    base_price: parseFloat(row.querySelector('.sc-price').value),
+  }));
+
+  const body = {
+    flight_number: document.getElementById('flight_number').value.trim(),
+    origin: document.getElementById('origin').value.trim().toUpperCase(),
+    destination: document.getElementById('destination').value.trim().toUpperCase(),
+    departure_ts: toIsoZ(document.getElementById('departure_ts').value),
+    arrival_ts: toIsoZ(document.getElementById('arrival_ts').value),
+    total_capacity: parseInt(document.getElementById('total_capacity').value, 10),
+    seat_classes,
+  };
+
+  showStatus(statusEl, 'Creating…', true);
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/flights`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-role': roleHeader(),
+        'Idempotency-Key': uid('web-create-flight'),
+      },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) { showStatus(statusEl, data.detail || 'Could not create flight.', false); return; }
+    showStatus(statusEl, data.message || `Flight #${data.flight_id} created.`, true);
+  } catch {
+    showStatus(statusEl, 'Network error — the backend may be waking up, try again shortly.', false);
+  }
+});
+
+/* ---------- Cancel flight ---------- */
+document.getElementById('resolution').addEventListener('change', (e) => {
+  document.getElementById('credit-days-field').style.display = e.target.value === 'credit' ? 'block' : 'none';
+});
+
+document.getElementById('cancel-flight-btn').addEventListener('click', async () => {
+  const statusEl = document.getElementById('cancel-status');
+  const flightId = document.getElementById('cancel_flight_id').value;
+  if (!flightId) { showStatus(statusEl, 'Enter a flight ID first.', false); return; }
+
+  const body = {
+    resolution: document.getElementById('resolution').value,
+    credit_validity_days: parseInt(document.getElementById('credit_days').value || '180', 10),
+  };
+
+  showStatus(statusEl, 'Cancelling…', true);
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/flights/${flightId}/cancel`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-role': roleHeader(),
+        'Idempotency-Key': uid('web-cancel-flight'),
+      },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) { showStatus(statusEl, data.detail || 'Could not cancel flight.', false); return; }
+    showStatus(statusEl, data.message || `Flight #${data.flight_id} cancelled.`, true);
+  } catch {
+    showStatus(statusEl, 'Network error — the backend may be waking up, try again shortly.', false);
+  }
+});
+
+/* ---------- Seat map ---------- */
+document.getElementById('seatmap-btn').addEventListener('click', async () => {
+  const flightId = document.getElementById('seatmap_flight_id').value;
+  const resultEl = document.getElementById('seatmap-result');
+  if (!flightId) return;
+
+  resultEl.innerHTML = '<p class="sub">Loading…</p>';
+
+  try {
+    const res = await fetch(`${API_BASE}/flights/${flightId}/seatmap`);
+    const data = await res.json();
+    if (!res.ok) { resultEl.innerHTML = `<p class="sub">${data.detail || 'Flight not found.'}</p>`; return; }
+
+    const grouped = {};
+    data.seats.forEach(s => {
+      grouped[s.class] = grouped[s.class] || [];
+      grouped[s.class].push(s);
+    });
+
+    resultEl.innerHTML = `<p class="sub">${data.flight_number} · ${data.total_seats} seats total</p>`;
+    Object.entries(grouped).forEach(([cls, seats]) => {
+      const block = document.createElement('div');
+      block.innerHTML = `<h3 style="font-size:.85rem; margin:14px 0 6px; text-transform:capitalize;">${cls}</h3>`;
+      const map = document.createElement('div');
+      map.className = 'seatmap';
+      seats.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'seat ' + (s.is_occupied ? 'taken' : 'free');
+        div.textContent = s.seat_number;
+        map.appendChild(div);
+      });
+      block.appendChild(map);
+      resultEl.appendChild(block);
+    });
+  } catch {
+    resultEl.innerHTML = '<p class="sub">Network error — the backend may be waking up, try again shortly.</p>';
+  }
+});
+</script>
+</body>
+</html>
