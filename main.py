@@ -17,6 +17,15 @@ engine = create_engine(
     pool_pre_ping=True,      # test each connection before using; reconnect if dead
     pool_recycle=300,        # refresh connections older than 5 minutes
 )
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 logger = logging.getLogger("flight_management")
 
