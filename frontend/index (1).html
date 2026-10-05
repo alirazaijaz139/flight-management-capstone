@@ -376,6 +376,43 @@ function wireConfirmCancel(bookingId) {
     }
   });
 }
+
+async function loadUpcomingFlights() {
+  try {
+    const res = await fetch(`${API_BASE}/flights/upcoming`);
+    const data = await res.json();
+    if (!data.flights || data.flights.length === 0) return;
+
+    const section = document.createElement('div');
+    section.innerHTML = '<div class="section-title">Upcoming flights</div>';
+    const list = document.createElement('div');
+
+    data.flights.forEach(f => {
+      const dep = new Date(f.departure_ts);
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'btn-secondary btn-small';
+      chip.style.margin = '0 8px 8px 0';
+      chip.textContent = `${f.origin} → ${f.destination} · ${f.flight_number} · ${dep.toLocaleDateString()}`;
+      chip.addEventListener('click', () => {
+        document.getElementById('origin').value = f.origin;
+        document.getElementById('destination').value = f.destination;
+        document.getElementById('date').value = dep.toISOString().slice(0, 10);
+        searchForm.dispatchEvent(new Event('submit'));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      list.appendChild(chip);
+    });
+
+    section.appendChild(list);
+    results.innerHTML = '';
+    results.appendChild(section);
+  } catch (err) {
+    // silent — the manual search box still works on its own
+  }
+}
+
+loadUpcomingFlights();
 </script>
 </body>
 </html>

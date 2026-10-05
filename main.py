@@ -1393,6 +1393,26 @@ def cancel_group_partial(group_id: str, req: PartialCancel,
 
 
 # ---------- Public: search available seats ----------
+@app.get("/flights/upcoming")
+def list_upcoming_flights():
+    """Public listing of scheduled future flights — lets a browsing website
+    show what's available without the caller already knowing a route/date."""
+    with engine.connect() as conn:
+        rows = conn.execute(text("""
+            SELECT id, flight_number, origin, destination, departure_ts
+            FROM flights
+            WHERE status = 'scheduled' AND departure_ts > now()
+            ORDER BY departure_ts
+            LIMIT 50
+        """)).fetchall()
+    return {
+        "flights": [
+            {"flight_id": r.id, "flight_number": r.flight_number,
+             "origin": r.origin, "destination": r.destination,
+             "departure_ts": str(r.departure_ts)}
+            for r in rows
+        ]
+    }
 
 @app.get("/search")
 def search_flights(origin: str, destination: str, date: str):
