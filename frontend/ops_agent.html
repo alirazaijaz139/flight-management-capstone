@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Flight Management System</title>
+    <title>Operations Agent Dashboard</title>
 
     <style>
         :root {
@@ -35,13 +34,14 @@
             background: var(--navy);
             color: white;
             padding: 18px 35px;
+
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .logo {
-            font-size: 25px;
+            font-size: 24px;
             font-weight: bold;
         }
 
@@ -49,7 +49,7 @@
             color: var(--amber);
         }
 
-        .customer {
+        .role {
             background: rgba(255,255,255,0.12);
             padding: 9px 15px;
             border-radius: 20px;
@@ -196,10 +196,6 @@
             margin-top: 20px;
         }
 
-        .hidden {
-            display: none;
-        }
-
         @media(max-width: 800px) {
 
             .grid {
@@ -217,6 +213,7 @@
     </style>
 </head>
 
+
 <body>
 
 <header>
@@ -225,8 +222,8 @@
         Flight<span>Mgmt</span>
     </div>
 
-    <div class="customer">
-        Customer Booking
+    <div class="role">
+        Role: <strong>ops_agent</strong>
     </div>
 
 </header>
@@ -234,19 +231,22 @@
 
 <div class="container">
 
-    <h1>Flight Booking System</h1>
+    <h1>Operations Agent Dashboard</h1>
 
     <p class="subtitle">
-        Search available flights and make your reservation.
+        Manage flight operations, seats and passenger bookings.
     </p>
 
 
     <div class="notice">
 
-        <strong>Customer:</strong>
+        <strong>Ops Agent:</strong>
 
-        Search a flight, select a flight, provide passenger information,
-        and hold your seat.
+        You can search flights, hold seats, confirm bookings,
+        cancel bookings and view seat maps.
+
+        Flight creation is handled by
+        <strong>super_admin</strong>.
 
     </div>
 
@@ -301,17 +301,28 @@
         </div>
 
 
+
         <!-- =====================================================
-             PASSENGER INFORMATION
+             HOLD SEAT
         ====================================================== -->
 
         <div class="card">
 
-            <h2>Passenger Information</h2>
+            <h2>Hold a Seat</h2>
 
             <p class="muted">
-                Enter your passenger ID.
+                Hold a seat for a passenger.
+                The Booking ID will be returned automatically.
             </p>
+
+
+            <label>Flight ID</label>
+
+            <input
+                id="holdFlightId"
+                type="number"
+                placeholder="Example: 15"
+            >
 
 
             <label>Passenger ID</label>
@@ -320,16 +331,6 @@
                 id="passengerId"
                 type="number"
                 placeholder="Example: 1"
-            >
-
-
-            <label>Selected Flight ID</label>
-
-            <input
-                id="flightId"
-                type="number"
-                placeholder="Select a flight"
-                readonly
             >
 
 
@@ -389,27 +390,27 @@
         </div>
 
 
+
         <!-- =====================================================
-             BOOKING RESULT
+             CONFIRM BOOKING
         ====================================================== -->
 
         <div class="card">
 
-            <h2>Booking</h2>
+            <h2>Confirm Booking</h2>
 
             <p class="muted">
-                Your Booking ID will appear here after successfully
-                holding a seat.
+                Enter the Booking ID returned after holding a seat.
             </p>
 
 
-            <div id="bookingBox">
+            <label>Booking ID</label>
 
-                <p>
-                    No booking created yet.
-                </p>
-
-            </div>
+            <input
+                id="confirmBookingId"
+                type="number"
+                placeholder="Example: 48"
+            >
 
 
             <button
@@ -420,6 +421,34 @@
             </button>
 
 
+            <div id="confirmResult"></div>
+
+        </div>
+
+
+
+        <!-- =====================================================
+             CANCEL BOOKING
+        ====================================================== -->
+
+        <div class="card">
+
+            <h2>Cancel Booking</h2>
+
+            <p class="muted">
+                Cancel a passenger booking using its Booking ID.
+            </p>
+
+
+            <label>Booking ID</label>
+
+            <input
+                id="cancelBookingId"
+                type="number"
+                placeholder="Example: 48"
+            >
+
+
             <button
                 class="danger"
                 onclick="cancelBooking()"
@@ -428,22 +457,32 @@
             </button>
 
 
-            <div id="bookingResult"></div>
+            <div id="cancelResult"></div>
 
         </div>
+
 
 
         <!-- =====================================================
              SEAT MAP
         ====================================================== -->
 
-        <div class="card full">
+        <div class="card">
 
-            <h2>Seat Map</h2>
+            <h2>Seat Map Lookup</h2>
 
             <p class="muted">
-                View available and occupied seats for the selected flight.
+                Check occupied and available seats for a flight.
             </p>
+
+
+            <label>Flight ID</label>
+
+            <input
+                id="seatMapFlightId"
+                type="number"
+                placeholder="Example: 15"
+            >
 
 
             <button
@@ -458,27 +497,22 @@
 
         </div>
 
-
     </div>
 
 </div>
 
 
+
 <script>
 
+
 /* ============================================================
-   BACKEND
+   RENDER BACKEND
 ============================================================ */
 
 const API_BASE =
     "https://flight-management-capstone.onrender.com";
 
-
-/* ============================================================
-   GLOBAL BOOKING ID
-============================================================ */
-
-let currentBookingId = null;
 
 
 /* ============================================================
@@ -497,6 +531,7 @@ function showResult(elementId, message, success = true) {
 
     element.textContent = message;
 }
+
 
 
 /* ============================================================
@@ -555,8 +590,7 @@ async function searchFlights() {
 
             showResult(
                 "searchResult",
-                data.detail ||
-                JSON.stringify(data),
+                data.detail || JSON.stringify(data),
                 false
             );
 
@@ -580,6 +614,7 @@ async function searchFlights() {
 }
 
 
+
 /* ============================================================
    DISPLAY FLIGHTS
 ============================================================ */
@@ -593,9 +628,7 @@ function displayFlights(data) {
     const flights =
         Array.isArray(data)
         ? data
-        : data.flights ||
-          data.results ||
-          [];
+        : data.flights || data.results || [];
 
 
     if (!flights.length) {
@@ -666,21 +699,25 @@ function displayFlights(data) {
         `;
 
 
+        /*
+         * Click flight
+         * automatically fills Flight ID
+         */
+
         div.onclick = function() {
 
             if (flight.flight_id) {
 
                 document
-                .getElementById("flightId")
+                .getElementById("holdFlightId")
                 .value =
                     flight.flight_id;
 
-                showResult(
-                    "searchResult",
-                    `Flight ${flight.flight_id} selected.`,
-                    true
-                );
 
+                document
+                .getElementById("seatMapFlightId")
+                .value =
+                    flight.flight_id;
             }
 
         };
@@ -692,6 +729,7 @@ function displayFlights(data) {
 }
 
 
+
 /* ============================================================
    HOLD SEAT
 ============================================================ */
@@ -701,7 +739,7 @@ async function holdSeat() {
     const flightId =
         Number(
             document
-            .getElementById("flightId")
+            .getElementById("holdFlightId")
             .value
         );
 
@@ -733,23 +771,11 @@ async function holdSeat() {
         .trim();
 
 
-    if (!flightId) {
+    if (!flightId || !passengerId) {
 
         showResult(
             "holdResult",
-            "Please search and select a flight first.",
-            false
-        );
-
-        return;
-    }
-
-
-    if (!passengerId) {
-
-        showResult(
-            "holdResult",
-            "Please enter Passenger ID.",
+            "Flight ID and Passenger ID are required.",
             false
         );
 
@@ -793,7 +819,7 @@ async function holdSeat() {
                             "application/json",
 
                         "Idempotency-Key":
-                            "customer-hold-" +
+                            "hold-" +
                             Date.now()
 
                     },
@@ -822,9 +848,10 @@ async function holdSeat() {
         }
 
 
-        currentBookingId =
-            data.booking_id;
-
+        /*
+         * IMPORTANT:
+         * Booking ID is shown here
+         */
 
         showResult(
             "holdResult",
@@ -844,29 +871,24 @@ ${data.hold_expires_in_minutes ?? 15} minutes`,
         );
 
 
-        document
-        .getElementById("bookingBox")
-        .innerHTML = `
+        /*
+         * Automatically copy Booking ID
+         * into Confirm and Cancel fields
+         */
 
-            <p>Booking ID</p>
+        if (data.booking_id) {
 
-            <div class="booking-id">
-                #${data.booking_id}
-            </div>
+            document
+            .getElementById("confirmBookingId")
+            .value =
+                data.booking_id;
 
-            <p>
-                Status:
-                <strong>${data.status}</strong>
-            </p>
 
-            <p>
-                Price:
-                <strong>
-                    USD ${data.price ?? ""}
-                </strong>
-            </p>
-
-        `;
+            document
+            .getElementById("cancelBookingId")
+            .value =
+                data.booking_id;
+        }
 
     }
 
@@ -882,17 +904,26 @@ ${data.hold_expires_in_minutes ?? 15} minutes`,
 }
 
 
+
 /* ============================================================
    CONFIRM BOOKING
 ============================================================ */
 
 async function confirmBooking() {
 
-    if (!currentBookingId) {
+    const bookingId =
+        Number(
+            document
+            .getElementById("confirmBookingId")
+            .value
+        );
+
+
+    if (!bookingId) {
 
         showResult(
-            "bookingResult",
-            "No Booking ID available. Please hold a seat first.",
+            "confirmResult",
+            "Please enter Booking ID.",
             false
         );
 
@@ -904,7 +935,7 @@ async function confirmBooking() {
 
         const response =
             await fetch(
-                `${API_BASE}/bookings/${currentBookingId}/confirm`,
+                `${API_BASE}/bookings/${bookingId}/confirm`,
                 {
 
                     method: "POST",
@@ -912,7 +943,7 @@ async function confirmBooking() {
                     headers: {
 
                         "Idempotency-Key":
-                            "customer-confirm-" +
+                            "confirm-" +
                             Date.now()
 
                     }
@@ -928,7 +959,7 @@ async function confirmBooking() {
         if (!response.ok) {
 
             showResult(
-                "bookingResult",
+                "confirmResult",
                 data.detail ||
                 JSON.stringify(data),
                 false
@@ -940,7 +971,7 @@ async function confirmBooking() {
 
         showResult(
 
-            "bookingResult",
+            "confirmResult",
 
             `Booking #${data.booking_id}
 
@@ -953,37 +984,12 @@ USD ${data.amount_paid}`,
 
         );
 
-
-        document
-        .getElementById("bookingBox")
-        .innerHTML = `
-
-            <p>Booking ID</p>
-
-            <div class="booking-id">
-                #${data.booking_id}
-            </div>
-
-            <p>
-                Status:
-                <strong>CONFIRMED</strong>
-            </p>
-
-            <p>
-                Amount Paid:
-                <strong>
-                    USD ${data.amount_paid}
-                </strong>
-            </p>
-
-        `;
-
     }
 
     catch(error) {
 
         showResult(
-            "bookingResult",
+            "confirmResult",
             "Backend connection failed: " +
             error.message,
             false
@@ -992,17 +998,26 @@ USD ${data.amount_paid}`,
 }
 
 
+
 /* ============================================================
    CANCEL BOOKING
 ============================================================ */
 
 async function cancelBooking() {
 
-    if (!currentBookingId) {
+    const bookingId =
+        Number(
+            document
+            .getElementById("cancelBookingId")
+            .value
+        );
+
+
+    if (!bookingId) {
 
         showResult(
-            "bookingResult",
-            "No Booking ID available.",
+            "cancelResult",
+            "Please enter Booking ID.",
             false
         );
 
@@ -1012,11 +1027,12 @@ async function cancelBooking() {
 
     const confirmed =
         confirm(
-            `Are you sure you want to cancel Booking #${currentBookingId}?`
+            `Are you sure you want to cancel Booking #${bookingId}?`
         );
 
 
     if (!confirmed) {
+
         return;
     }
 
@@ -1025,7 +1041,7 @@ async function cancelBooking() {
 
         const response =
             await fetch(
-                `${API_BASE}/bookings/${currentBookingId}/cancel`,
+                `${API_BASE}/bookings/${bookingId}/cancel`,
                 {
 
                     method: "POST",
@@ -1033,7 +1049,7 @@ async function cancelBooking() {
                     headers: {
 
                         "Idempotency-Key":
-                            "customer-cancel-" +
+                            "cancel-" +
                             Date.now()
 
                     }
@@ -1049,7 +1065,7 @@ async function cancelBooking() {
         if (!response.ok) {
 
             showResult(
-                "bookingResult",
+                "cancelResult",
                 data.detail ||
                 JSON.stringify(data),
                 false
@@ -1061,7 +1077,7 @@ async function cancelBooking() {
 
         showResult(
 
-            "bookingResult",
+            "cancelResult",
 
             `Booking #${data.booking_id}
 
@@ -1077,36 +1093,19 @@ ${data.reason ?? ""}`,
 
         );
 
-
-        document
-        .getElementById("bookingBox")
-        .innerHTML = `
-
-            <p>Booking ID</p>
-
-            <div class="booking-id">
-                #${data.booking_id}
-            </div>
-
-            <p>
-                Status:
-                <strong>CANCELLED</strong>
-            </p>
-
-        `;
-
     }
 
     catch(error) {
 
         showResult(
-            "bookingResult",
+            "cancelResult",
             "Backend connection failed: " +
             error.message,
             false
         );
     }
 }
+
 
 
 /* ============================================================
@@ -1118,7 +1117,7 @@ async function loadSeatMap() {
     const flightId =
         Number(
             document
-            .getElementById("flightId")
+            .getElementById("seatMapFlightId")
             .value
         );
 
@@ -1127,7 +1126,7 @@ async function loadSeatMap() {
 
         showResult(
             "seatMapResult",
-            "Please search and select a flight first.",
+            "Please enter Flight ID.",
             false
         );
 
