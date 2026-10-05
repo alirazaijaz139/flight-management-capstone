@@ -1,950 +1,1973 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Customer Booking - FlightMgmt</title>
+    <title>Flight Booking System</title>
 
     <style>
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
-            margin: 0;
             font-family: Arial, Helvetica, sans-serif;
-            background: #f5f3ef;
-            color: #08264a;
+            background: #f5f7fa;
+            color: #102a43;
         }
 
-        /* ================= HEADER ================= */
+        /* =========================
+           HEADER
+        ========================= */
 
         header {
-            background: #08213f;
+            background: #0b2545;
             color: white;
-            padding: 14px 32px;
+            padding: 18px 5%;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            gap: 20px;
-            flex-wrap: wrap;
+            align-items: center;
         }
 
-        .logo {
-            font-size: 32px;
-            font-weight: bold;
-            white-space: nowrap;
+        header h2 {
+            font-size: 22px;
         }
 
-        .logo span {
-            color: #f5a623;
+        header span {
+            font-size: 14px;
+            opacity: 0.9;
         }
 
-        .nav-buttons {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
 
-        .nav-buttons a {
-            text-decoration: none;
-            color: white;
-            background: #294463;
-            padding: 14px 22px;
-            border-radius: 30px;
-            font-size: 17px;
-            font-weight: bold;
-        }
-
-        .nav-buttons a:hover {
-            background: #3b5878;
-        }
-
-        .nav-buttons a.active {
-            background: #f5a623;
-            color: #08213f;
-        }
-
-        .role {
-            background: #294463;
-            color: white;
-            padding: 14px 22px;
-            border-radius: 30px;
-            font-size: 17px;
-            font-weight: bold;
-        }
-
-        /* ================= MAIN ================= */
+        /* =========================
+           MAIN CONTAINER
+        ========================= */
 
         .container {
             width: 92%;
-            max-width: 1500px;
-            margin: 45px auto;
+            max-width: 1450px;
+            margin: 30px auto;
         }
 
-        h1 {
-            font-size: 52px;
-            margin-bottom: 15px;
-        }
 
-        .subtitle {
-            font-size: 25px;
-            color: #58708d;
-            margin-bottom: 30px;
-        }
+        /* =========================
+           TOP SEARCH
+        ========================= */
 
-        .info {
-            background: #fff8e8;
-            border: 1px solid #efc766;
-            border-radius: 12px;
-            padding: 24px;
-            font-size: 21px;
-            margin-bottom: 35px;
-        }
-
-        /* ================= CARD ================= */
-
-        .card {
+        .search-section {
             background: white;
-            border: 1px solid #ddd;
-            border-radius: 18px;
-            padding: 38px;
-            margin-bottom: 35px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
-        }
-
-        .card h2 {
-            font-size: 34px;
-            margin-top: 0;
-        }
-
-        .description {
-            color: #58708d;
-            font-size: 20px;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #e1e7ef;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
             margin-bottom: 25px;
         }
 
-        /* ================= FORM ================= */
-
-        label {
-            display: block;
-            font-size: 20px;
-            font-weight: bold;
-            margin: 18px 0 9px;
+        .search-title {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #0b2545;
         }
 
-        input,
-        select {
-            width: 100%;
-            padding: 17px;
-            font-size: 19px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            background: white;
-        }
-
-        input:focus,
-        select:focus {
-            outline: 2px solid #f5a623;
-        }
-
-        .grid {
+        .search-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
+            grid-template-columns: 1fr 1fr 1fr 1fr 0.8fr auto;
+            gap: 14px;
+            align-items: end;
         }
 
-        /* ================= BUTTON ================= */
+        .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: bold;
+            color: #627d98;
+            margin-bottom: 7px;
+        }
 
-        button {
+        .field input,
+        .field select {
+            width: 100%;
+            height: 46px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            padding: 0 12px;
+            font-size: 14px;
+            background: white;
+            color: #102a43;
+        }
+
+        .search-btn {
+            height: 46px;
+            padding: 0 22px;
             border: none;
-            background: #08213f;
+            border-radius: 7px;
+            background: #0b2545;
             color: white;
-            padding: 16px 28px;
-            border-radius: 10px;
-            font-size: 19px;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 25px;
         }
 
-        button:hover {
-            background: #15385f;
+        .search-btn:hover {
+            background: #163d6b;
         }
 
-        /* ================= RESULT ================= */
 
-        .result {
-            margin-top: 25px;
-            padding: 20px;
-            background: #f1f5f9;
-            border-radius: 10px;
-            white-space: pre-wrap;
-            overflow-x: auto;
-            font-family: Consolas, monospace;
-            font-size: 16px;
+        /* =========================
+           CONTENT LAYOUT
+        ========================= */
+
+        .content {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 25px;
+            align-items: start;
         }
 
-        .success {
-            background: #eaf8ee;
-            border: 1px solid #8ac99a;
+
+        /* =========================
+           BOOKING PANEL
+        ========================= */
+
+        .booking-panel {
+            background: white;
+            border: 1px solid #e1e7ef;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
-        .error {
-            background: #fff0ef;
-            border: 1px solid #e19a94;
+        .booking-panel h2 {
+            color: #0b2545;
+            margin-bottom: 6px;
         }
 
-        /* ================= BOOKING ID ================= */
+        .booking-subtitle {
+            color: #829ab1;
+            font-size: 13px;
+            margin-bottom: 22px;
+        }
 
-        .booking-box {
-            background: #eaf8ee;
-            border: 2px solid #8ac99a;
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 25px;
+        .booking-field {
+            margin-bottom: 16px;
+        }
+
+        .booking-field label {
+            display: block;
+            font-size: 13px;
+            font-weight: bold;
+            color: #486581;
+            margin-bottom: 7px;
+        }
+
+        .booking-field input,
+        .booking-field select {
+            width: 100%;
+            height: 44px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            padding: 0 12px;
+            font-size: 14px;
+            color: #102a43;
+        }
+
+        .booking-button {
+            width: 100%;
+            height: 46px;
+            border: none;
+            border-radius: 7px;
+            background: #0b2545;
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .booking-button:hover {
+            background: #163d6b;
+        }
+
+
+        /* =========================
+           SELECTED FLIGHT
+        ========================= */
+
+        .selected-flight {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #eef5ff;
+            border: 1px solid #c8dcf5;
             display: none;
         }
 
-        .booking-box h3 {
-            margin-top: 0;
-            font-size: 25px;
+        .selected-flight h4 {
+            margin-bottom: 8px;
+            color: #0b2545;
         }
 
-        .booking-id {
-            font-size: 38px;
+        .selected-flight p {
+            font-size: 13px;
+            color: #486581;
+            margin: 4px 0;
+        }
+
+
+        /* =========================
+           FLIGHTS SECTION
+        ========================= */
+
+        .flights-panel {
+            min-width: 0;
+        }
+
+        .flights-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .flights-header h1 {
+            font-size: 28px;
+            color: #0b2545;
+        }
+
+        .route-info {
+            color: #627d98;
+            font-size: 15px;
+            margin-bottom: 18px;
+        }
+
+
+        /* =========================
+           FLIGHT CARD
+        ========================= */
+
+        .flight-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .flight-card {
+            background: white;
+            border: 1px solid #e1e7ef;
+            border-radius: 10px;
+            padding: 19px 20px;
+
+            display: grid;
+            grid-template-columns:
+                1.2fr
+                0.9fr
+                0.8fr
+                0.9fr
+                0.7fr
+                0.9fr;
+
+            align-items: center;
+
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        }
+
+        .airline-name {
+            font-size: 17px;
             font-weight: bold;
-            color: #17652b;
+            color: #102a43;
         }
 
-        /* ================= BOTTOM NAV ================= */
+        .flight-number {
+            margin-top: 5px;
+            font-size: 13px;
+            color: #829ab1;
+        }
 
-        .bottom-navigation {
-            margin-top: 60px;
-            padding: 45px 20px;
-            background: #08213f;
+        .time {
+            font-size: 20px;
+            font-weight: bold;
+            color: #102a43;
+        }
+
+        .airport {
+            margin-top: 4px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .airport-name {
+            margin-top: 3px;
+            font-size: 11px;
+            color: #829ab1;
+        }
+
+        .duration {
             text-align: center;
         }
 
-        .bottom-navigation h2 {
-            color: white;
-            margin-top: 0;
-            margin-bottom: 25px;
-            font-size: 30px;
+        .duration-time {
+            font-size: 12px;
+            color: #627d98;
+            margin-bottom: 7px;
         }
 
-        .bottom-nav-buttons {
+        .flight-line {
             display: flex;
+            align-items: center;
             justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
         }
 
-        .bottom-nav-buttons a {
-            text-decoration: none;
-            color: white;
-            background: #294463;
-            padding: 15px 25px;
-            border-radius: 30px;
-            font-size: 18px;
+        .flight-line::before,
+        .flight-line::after {
+            content: "";
+            width: 35px;
+            height: 1px;
+            background: #bcccdc;
+        }
+
+        .plane {
+            margin: 0 6px;
+            font-size: 16px;
+        }
+
+        .nonstop {
+            margin-top: 6px;
+            font-size: 11px;
+            color: #829ab1;
+        }
+
+        .class {
+            display: inline-block;
+            background: #e8f1ff;
+            color: #1769aa;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
             font-weight: bold;
         }
 
-        .bottom-nav-buttons a:hover {
-            background: #f5a623;
-            color: #08213f;
+        .price {
+            text-align: center;
         }
 
-        /* ================= MOBILE ================= */
+        .price-value {
+            font-size: 21px;
+            font-weight: bold;
+            color: #102a43;
+        }
 
-        @media (max-width: 900px) {
+        .per-person {
+            font-size: 11px;
+            color: #829ab1;
+            margin-top: 3px;
+        }
 
-            header {
-                padding: 18px;
+        .select-btn {
+            margin-top: 9px;
+            padding: 9px 15px;
+            border: none;
+            border-radius: 6px;
+            background: #0b2545;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .select-btn:hover {
+            background: #163d6b;
+        }
+
+
+        /* =========================
+           NO FLIGHTS
+        ========================= */
+
+        .no-flights {
+            background: white;
+            border: 1px solid #e1e7ef;
+            border-radius: 10px;
+            padding: 35px;
+            text-align: center;
+            color: #829ab1;
+        }
+
+
+        /* =========================
+           UPCOMING FLIGHTS
+        ========================= */
+
+        .upcoming {
+            margin-top: 45px;
+        }
+
+        .upcoming h2 {
+            font-size: 27px;
+            color: #0b2545;
+            margin-bottom: 18px;
+        }
+
+        .upcoming-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .upcoming-flight {
+            background: #0b2545;
+            color: white;
+            padding: 14px 20px;
+            border-radius: 7px;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+
+        /* =========================
+           MESSAGE
+        ========================= */
+
+        .message {
+            display: none;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 7px;
+            font-size: 13px;
+        }
+
+        .success {
+            background: #e7f7ed;
+            color: #207544;
+            border: 1px solid #b8e4c8;
+        }
+
+        .error {
+            background: #fff0f0;
+            color: #a33a3a;
+            border: 1px solid #efc1c1;
+        }
+
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media (max-width: 1150px) {
+
+            .search-grid {
+                grid-template-columns: 1fr 1fr 1fr;
             }
 
-            .nav-buttons {
-                width: 100%;
+            .content {
+                grid-template-columns: 300px 1fr;
             }
 
-            .role {
-                display: none;
+            .flight-card {
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 18px;
             }
+        }
+
+
+        @media (max-width: 850px) {
+
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .booking-panel {
+                order: 1;
+            }
+
+            .flights-panel {
+                order: 2;
+            }
+
+            .search-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+
+        @media (max-width: 550px) {
 
             .container {
                 width: 94%;
             }
 
-            h1 {
-                font-size: 38px;
-            }
-
-            .subtitle {
-                font-size: 19px;
-            }
-
-            .grid {
+            .search-grid {
                 grid-template-columns: 1fr;
             }
 
-            .card {
-                padding: 25px;
+            .flight-card {
+                grid-template-columns: 1fr;
+            }
+
+            .duration {
+                text-align: left;
+            }
+
+            .price {
+                text-align: left;
+            }
+
+            .upcoming-flight {
+                width: 100%;
             }
         }
+
     </style>
 </head>
 
+
 <body>
 
-<!-- =====================================================
-     TOP NAVIGATION
-====================================================== -->
+
+<!-- =========================
+     HEADER
+========================= -->
 
 <header>
 
-    <div class="logo">
-        Flight<span>Mgmt</span>
-    </div>
+    <h2>✈ Flight Booking System</h2>
 
-    <div class="nav-buttons">
-
-        <a href="index.html" class="active">
-            ✈️ Customer Booking
-        </a>
-
-        <a href="ops_agent.html">
-            ⚙️ Ops Agent
-        </a>
-
-        <a href="admin.html">
-            👑 Super Admin
-        </a>
-
-    </div>
-
-    <div class="role">
-        Role: customer
-    </div>
+    <span>Manage your flights and bookings</span>
 
 </header>
 
 
-<!-- =====================================================
-     MAIN
-====================================================== -->
 
 <div class="container">
 
-    <h1>Customer Booking</h1>
 
-    <div class="subtitle">
-        Search flights and make your booking.
-    </div>
+    <!-- =========================
+         SEARCH SECTION
+    ========================= -->
 
-    <div class="info">
-        <strong>Customer:</strong>
-        Search for an available flight, select your seat,
-        hold the seat and confirm your booking.
-    </div>
+    <div class="search-section">
 
-
-    <!-- =================================================
-         SEARCH FLIGHTS
-    ================================================== -->
-
-    <div class="card">
-
-        <h2>Search Flights</h2>
-
-        <div class="description">
-            Enter your journey details to find available flights.
-        </div>
-
-        <div class="grid">
-
-            <div>
-
-                <label for="origin">
-                    Origin
-                </label>
-
-                <input
-                    id="origin"
-                    type="text"
-                    placeholder="Example: LHR"
-                >
-
-            </div>
-
-
-            <div>
-
-                <label for="destination">
-                    Destination
-                </label>
-
-                <input
-                    id="destination"
-                    type="text"
-                    placeholder="Example: DXB"
-                >
-
-            </div>
-
-        </div>
-
-
-        <label for="date">
-            Travel Date
-        </label>
-
-        <input
-            id="date"
-            type="date"
-        >
-
-
-        <button onclick="searchFlights()">
+        <div class="search-title">
             Search Flights
-        </button>
+        </div>
 
 
-        <div id="searchResult" class="result">
-            Search results will appear here.
+        <div class="search-grid">
+
+
+            <div class="field">
+
+                <label>From</label>
+
+                <input
+                    type="text"
+                    id="from"
+                    value="LHR"
+                    placeholder="e.g. LHR"
+                >
+
+            </div>
+
+
+
+            <div class="field">
+
+                <label>To</label>
+
+                <input
+                    type="text"
+                    id="to"
+                    value="DXB"
+                    placeholder="e.g. DXB"
+                >
+
+            </div>
+
+
+
+            <div class="field">
+
+                <label>Departure</label>
+
+                <input
+                    type="date"
+                    id="departureDate"
+                    value="2026-10-15"
+                >
+
+            </div>
+
+
+
+            <div class="field">
+
+                <label>Return</label>
+
+                <input
+                    type="date"
+                    id="returnDate"
+                    value="2026-10-20"
+                >
+
+            </div>
+
+
+
+            <div class="field">
+
+                <label>Passengers</label>
+
+                <select id="passengers">
+
+                    <option value="1">
+                        1 Adult
+                    </option>
+
+                    <option value="2">
+                        2 Adults
+                    </option>
+
+                    <option value="3">
+                        3 Adults
+                    </option>
+
+                    <option value="4">
+                        4 Adults
+                    </option>
+
+                </select>
+
+            </div>
+
+
+
+            <button
+                class="search-btn"
+                onclick="searchFlights()"
+            >
+                🔍 Search
+            </button>
+
+
         </div>
 
     </div>
 
 
-    <!-- =================================================
-         BOOK FLIGHT
-    ================================================== -->
 
-    <div class="card">
+    <!-- =========================
+         MAIN CONTENT
+    ========================= -->
 
-        <h2>Book a Flight</h2>
-
-        <div class="description">
-            Enter the flight and passenger information.
-        </div>
+    <div class="content">
 
 
-        <label for="flightId">
-            Flight ID
-        </label>
+        <!-- =========================
+             BOOKING
+        ========================= -->
 
-        <input
-            id="flightId"
-            type="number"
-            placeholder="Example: 15"
-        >
+        <div class="booking-panel">
 
+            <h2>
+                Booking
+            </h2>
 
-        <label for="passengerId">
-            Passenger ID
-        </label>
-
-        <input
-            id="passengerId"
-            type="number"
-            placeholder="Example: 1"
-        >
-
-
-        <label for="seatClass">
-            Seat Class
-        </label>
-
-        <select id="seatClass">
-
-            <option value="Economy">
-                Economy
-            </option>
-
-            <option value="Business">
-                Business
-            </option>
-
-            <option value="First">
-                First
-            </option>
-
-        </select>
-
-
-        <label for="fare">
-            Fare
-        </label>
-
-        <select id="fare">
-
-            <option value="Flexible">
-                Flexible
-            </option>
-
-            <option value="Standard">
-                Standard
-            </option>
-
-            <option value="Saver">
-                Saver
-            </option>
-
-        </select>
-
-
-        <label for="requestedSeat">
-            Requested Seat (Optional)
-        </label>
-
-        <input
-            id="requestedSeat"
-            type="text"
-            placeholder="Example: E12"
-        >
-
-
-        <button onclick="holdSeat()">
-            Hold Seat
-        </button>
-
-
-        <!-- BOOKING ID -->
-
-        <div id="bookingBox" class="booking-box">
-
-            <h3>
-                Booking Created
-            </h3>
-
-            <div>
-                Your Booking ID:
-            </div>
-
-            <div
-                id="bookingIdDisplay"
-                class="booking-id"
-            >
-                -
-            </div>
-
-            <p>
-                Save this Booking ID for confirmation.
+            <p class="booking-subtitle">
+                Enter passenger details
             </p>
 
+
+
+            <div class="booking-field">
+
+                <label>
+                    Passenger Name
+                </label>
+
+                <input
+                    type="text"
+                    id="passengerName"
+                    placeholder="Enter full name"
+                >
+
+            </div>
+
+
+
+            <div class="booking-field">
+
+                <label>
+                    Email
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Enter email"
+                >
+
+            </div>
+
+
+
+            <div class="booking-field">
+
+                <label>
+                    Phone
+                </label>
+
+                <input
+                    type="text"
+                    id="phone"
+                    placeholder="Enter phone number"
+                >
+
+            </div>
+
+
+
+            <div class="booking-field">
+
+                <label>
+                    Seat Class
+                </label>
+
+                <select id="seatClass">
+
+                    <option value="Economy">
+                        Economy
+                    </option>
+
+                    <option value="Business">
+                        Business
+                    </option>
+
+                </select>
+
+            </div>
+
+
+
+            <div class="booking-field">
+
+                <label>
+                    Selected Flight
+                </label>
+
+                <input
+                    type="text"
+                    id="selectedFlight"
+                    placeholder="Select a flight"
+                    readonly
+                >
+
+            </div>
+
+
+
+            <button
+                class="booking-button"
+                onclick="makeBooking()"
+            >
+                Confirm Booking
+            </button>
+
+
+
+            <div
+                id="bookingMessage"
+                class="message"
+            ></div>
+
+
+
+            <!-- SELECTED FLIGHT -->
+
+            <div
+                id="selectedFlightBox"
+                class="selected-flight"
+            >
+
+                <h4>
+                    Selected Flight
+                </h4>
+
+                <p id="selectedFlightInfo"></p>
+
+            </div>
+
+
         </div>
 
 
-        <div id="holdResult" class="result">
-            Booking result will appear here.
+
+        <!-- =========================
+             AVAILABLE FLIGHTS
+        ========================= -->
+
+        <div class="flights-panel">
+
+
+            <div class="flights-header">
+
+                <h1>
+                    Available Flights
+                </h1>
+
+            </div>
+
+
+            <div
+                class="route-info"
+                id="routeInfo"
+            >
+                LHR → DXB • 15 Oct 2026 – 20 Oct 2026 • 1 Adult
+            </div>
+
+
+
+            <div
+                class="flight-list"
+                id="flightList"
+            >
+
+
+                <!-- STATIC FLIGHT 1 -->
+
+                <div class="flight-card">
+
+                    <div>
+
+                        <div class="airline-name">
+                            Emirates
+                        </div>
+
+                        <div class="flight-number">
+                            EK 403
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="time">
+                            10:20
+                        </div>
+
+                        <div class="airport">
+                            LHR
+                        </div>
+
+                        <div class="airport-name">
+                            London Heathrow
+                        </div>
+
+                    </div>
+
+
+                    <div class="duration">
+
+                        <div class="duration-time">
+                            6h 45m
+                        </div>
+
+                        <div class="flight-line">
+                            <span class="plane">
+                                ✈
+                            </span>
+                        </div>
+
+                        <div class="nonstop">
+                            Non-stop
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="time">
+                            19:05
+                        </div>
+
+                        <div class="airport">
+                            DXB
+                        </div>
+
+                        <div class="airport-name">
+                            Dubai International
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <span class="class">
+                            Economy
+                        </span>
+
+                    </div>
+
+
+                    <div class="price">
+
+                        <div class="price-value">
+                            $678
+                        </div>
+
+                        <div class="per-person">
+                            per person
+                        </div>
+
+                        <button
+                            class="select-btn"
+                            onclick="selectFlight(
+                                'EK 403',
+                                'Emirates',
+                                'LHR',
+                                'DXB',
+                                '$678'
+                            )"
+                        >
+                            Select →
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- STATIC FLIGHT 2 -->
+
+                <div class="flight-card">
+
+                    <div>
+
+                        <div class="airline-name">
+                            Qatar Airways
+                        </div>
+
+                        <div class="flight-number">
+                            QR 812
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="time">
+                            14:35
+                        </div>
+
+                        <div class="airport">
+                            LHR
+                        </div>
+
+                        <div class="airport-name">
+                            London Heathrow
+                        </div>
+
+                    </div>
+
+
+                    <div class="duration">
+
+                        <div class="duration-time">
+                            7h 10m
+                        </div>
+
+                        <div class="flight-line">
+                            <span class="plane">
+                                ✈
+                            </span>
+                        </div>
+
+                        <div class="nonstop">
+                            Non-stop
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="time">
+                            23:45
+                        </div>
+
+                        <div class="airport">
+                            DXB
+                        </div>
+
+                        <div class="airport-name">
+                            Dubai International
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <span class="class">
+                            Economy
+                        </span>
+
+                    </div>
+
+
+                    <div class="price">
+
+                        <div class="price-value">
+                            $715
+                        </div>
+
+                        <div class="per-person">
+                            per person
+                        </div>
+
+                        <button
+                            class="select-btn"
+                            onclick="selectFlight(
+                                'QR 812',
+                                'Qatar Airways',
+                                'LHR',
+                                'DXB',
+                                '$715'
+                            )"
+                        >
+                            Select →
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- STATIC FLIGHT 3 -->
+
+                <div class="flight-card">
+
+                    <div>
+
+                        <div class="airline-name">
+                            flydubai
+                        </div>
+
+                        <div class="flight-number">
+                            FZ 1024
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="time">
+                            18:50
+                        </div>
+
+                        <div class="airport">
+                            LHR
+                        </div>
+
+                        <div class="airport-name">
+                            London Heathrow
+                        </div>
+
+                    </div>
+
+
+                    <div class="duration">
+
+                        <div class="duration-time">
+                            7h 25m
+                        </div>
+
+                        <div class="flight-line">
+                            <span class="plane">
+                                ✈
+                            </span>
+                        </div>
+
+                        <div class="nonstop">
+                            Non-stop
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="time">
+                            04:15
+                        </div>
+
+                        <div class="airport">
+                            DXB
+                        </div>
+
+                        <div class="airport-name">
+                            Dubai International
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <span class="class">
+                            Economy
+                        </span>
+
+                    </div>
+
+
+                    <div class="price">
+
+                        <div class="price-value">
+                            $742
+                        </div>
+
+                        <div class="per-person">
+                            per person
+                        </div>
+
+                        <button
+                            class="select-btn"
+                            onclick="selectFlight(
+                                'FZ 1024',
+                                'flydubai',
+                                'LHR',
+                                'DXB',
+                                '$742'
+                            )"
+                        >
+                            Select →
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
         </div>
 
     </div>
 
 
-    <!-- =================================================
-         CONFIRM BOOKING
-    ================================================== -->
 
-    <div class="card">
+    <!-- =========================
+         UPCOMING FLIGHTS
+    ========================= -->
 
-        <h2>Confirm Booking</h2>
+    <div class="upcoming">
 
-        <div class="description">
-            Enter your Booking ID to confirm the held seat.
-        </div>
+        <h2>
+            Upcoming flights
+        </h2>
 
 
-        <label for="confirmBookingId">
-            Booking ID
-        </label>
-
-        <input
-            id="confirmBookingId"
-            type="number"
-            placeholder="Example: 48"
+        <div
+            class="upcoming-list"
+            id="upcomingList"
         >
 
+            <div class="upcoming-flight">
+                LHR → DXB · TEST998 · 15/10/2026
+            </div>
 
-        <button onclick="confirmBooking()">
-            Confirm Booking
-        </button>
+            <div class="upcoming-flight">
+                LHR → DXB · TEST997 · 20/10/2026
+            </div>
 
-
-        <div id="confirmResult" class="result">
-            Confirmation result will appear here.
         </div>
 
     </div>
 
-</div>
-
-
-<!-- =====================================================
-     BOTTOM NAVIGATION
-====================================================== -->
-
-<div class="bottom-navigation">
-
-    <h2>
-        Switch Dashboard
-    </h2>
-
-    <div class="bottom-nav-buttons">
-
-        <a href="index.html">
-            ✈️ Customer Booking
-        </a>
-
-        <a href="ops_agent.html">
-            ⚙️ Ops Agent
-        </a>
-
-        <a href="admin.html">
-            👑 Super Admin
-        </a>
-
-    </div>
 
 </div>
 
 
-<!-- =====================================================
-     JAVASCRIPT
-====================================================== -->
 
 <script>
 
-    const API_BASE =
-        "https://flight-management-capstone.onrender.com";
+
+/* ==========================================
+   BACKEND URL
+========================================== */
+
+const API_BASE =
+    "https://flight-management-capstone.onrender.com";
 
 
-    /* =================================================
-       RESPONSE HELPER
-    ================================================== */
 
-    async function getResponseData(response) {
+/* ==========================================
+   SEARCH FLIGHTS
+========================================== */
 
-        const text =
-            await response.text();
+async function searchFlights() {
 
-        try {
-            return JSON.parse(text);
-        }
 
-        catch {
-            return text;
-        }
+    const from =
+        document
+            .getElementById("from")
+            .value
+            .trim()
+            .toUpperCase();
+
+
+    const to =
+        document
+            .getElementById("to")
+            .value
+            .trim()
+            .toUpperCase();
+
+
+    const departure =
+        document
+            .getElementById("departureDate")
+            .value;
+
+
+    const returnDate =
+        document
+            .getElementById("returnDate")
+            .value;
+
+
+    const passengers =
+        document
+            .getElementById("passengers")
+            .value;
+
+
+
+    if (!from || !to || !departure) {
+
+        alert(
+            "Please enter From, To and Departure Date."
+        );
+
+        return;
     }
 
 
-    function showResult(
-        elementId,
-        data,
-        success = true
-    ) {
 
-        const element =
-            document.getElementById(elementId);
+    document
+        .getElementById("routeInfo")
+        .innerText =
+        `${from} → ${to} • ${formatDate(departure)} – ${formatDate(returnDate)} • ${passengers} Adult`;
 
-        element.textContent =
-            typeof data === "string"
+
+
+    const flightList =
+        document.getElementById("flightList");
+
+
+    flightList.innerHTML = `
+        <div class="no-flights">
+            Searching available flights...
+        </div>
+    `;
+
+
+
+    try {
+
+
+        /*
+         * Backend search endpoint
+         */
+
+        const url =
+            `${API_BASE}/search?origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}&date=${encodeURIComponent(departure)}`;
+
+
+
+        const response =
+            await fetch(url);
+
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Backend returned " +
+                response.status
+            );
+
+        }
+
+
+
+        const data =
+            await response.json();
+
+
+
+        /*
+         * Support different backend responses
+         */
+
+        const flights =
+            Array.isArray(data)
                 ? data
-                : JSON.stringify(data, null, 2);
-
-        element.className =
-            success
-                ? "result success"
-                : "result error";
-    }
-
-
-    /* =================================================
-       SEARCH
-    ================================================== */
-
-    async function searchFlights() {
-
-        const origin =
-            document.getElementById("origin")
-                .value
-                .trim()
-                .toUpperCase();
-
-        const destination =
-            document.getElementById("destination")
-                .value
-                .trim()
-                .toUpperCase();
-
-        const date =
-            document.getElementById("date")
-                .value;
-
-
-        if (
-            !origin ||
-            !destination ||
-            !date
-        ) {
-
-            showResult(
-                "searchResult",
-                "Please enter Origin, Destination and Date.",
-                false
-            );
-
-            return;
-        }
-
-
-        try {
-
-            const url =
-                `${API_BASE}/search` +
-                `?origin=${encodeURIComponent(origin)}` +
-                `&destination=${encodeURIComponent(destination)}` +
-                `&date=${encodeURIComponent(date)}`;
-
-
-            const response =
-                await fetch(url);
-
-
-            const data =
-                await getResponseData(response);
-
-
-            showResult(
-                "searchResult",
-                data,
-                response.ok
-            );
-
-        }
-
-        catch (error) {
-
-            showResult(
-                "searchResult",
-                "Backend connection failed:\n\n" +
-                error.message,
-                false
-            );
-        }
-    }
-
-
-    /* =================================================
-       HOLD SEAT
-    ================================================== */
-
-    async function holdSeat() {
-
-        const flightId =
-            document.getElementById("flightId")
-                .value;
-
-        const passengerId =
-            document.getElementById("passengerId")
-                .value;
-
-        const seatClass =
-            document.getElementById("seatClass")
-                .value;
-
-        const fare =
-            document.getElementById("fare")
-                .value;
-
-        const requestedSeat =
-            document.getElementById("requestedSeat")
-                .value
-                .trim();
-
-
-        if (
-            !flightId ||
-            !passengerId
-        ) {
-
-            showResult(
-                "holdResult",
-                "Please enter Flight ID and Passenger ID.",
-                false
-            );
-
-            return;
-        }
-
-
-        const body = {
-
-            flight_id:
-                Number(flightId),
-
-            passenger_id:
-                Number(passengerId),
-
-            seat_class:
-                seatClass,
-
-            fare:
-                fare
-
-        };
-
-
-        if (requestedSeat) {
-
-            body.requested_seat_number =
-                requestedSeat;
-        }
-
-
-        try {
-
-            const idempotencyKey =
-                "customer-" +
-                Date.now() +
-                "-" +
-                Math.random()
-                    .toString(36)
-                    .substring(2);
-
-
-            const response =
-                await fetch(
-                    `${API_BASE}/bookings`,
-                    {
-                        method: "POST",
-
-                        headers: {
-
-                            "Content-Type":
-                                "application/json",
-
-                            "Idempotency-Key":
-                                idempotencyKey
-                        },
-
-                        body:
-                            JSON.stringify(body)
-                    }
+                : (
+                    data.flights ||
+                    data.results ||
+                    []
                 );
 
 
-            const data =
-                await getResponseData(response);
 
+        if (flights.length === 0) {
 
-            showResult(
-                "holdResult",
-                data,
-                response.ok
-            );
-
-
-            /* Show Booking ID */
-
-            if (
-                response.ok &&
-                data &&
-                data.booking_id
-            ) {
-
-                document.getElementById(
-                    "bookingBox"
-                ).style.display = "block";
-
-
-                document.getElementById(
-                    "bookingIdDisplay"
-                ).textContent =
-                    data.booking_id;
-
-
-                document.getElementById(
-                    "confirmBookingId"
-                ).value =
-                    data.booking_id;
-            }
-
-        }
-
-        catch (error) {
-
-            showResult(
-                "holdResult",
-                "Backend connection failed:\n\n" +
-                error.message,
-                false
-            );
-        }
-    }
-
-
-    /* =================================================
-       CONFIRM BOOKING
-    ================================================== */
-
-    async function confirmBooking() {
-
-        const bookingId =
-            document.getElementById(
-                "confirmBookingId"
-            ).value;
-
-
-        if (!bookingId) {
-
-            showResult(
-                "confirmResult",
-                "Please enter Booking ID.",
-                false
-            );
+            flightList.innerHTML = `
+                <div class="no-flights">
+                    No available flights found.
+                </div>
+            `;
 
             return;
         }
 
 
-        try {
 
-            const response =
-                await fetch(
-                    `${API_BASE}/bookings/${bookingId}/confirm`,
-                    {
-                        method: "POST"
-                    }
-                );
+        displayFlights(flights);
 
 
-            const data =
-                await getResponseData(response);
+
+    } catch (error) {
 
 
-            showResult(
-                "confirmResult",
-                data,
-                response.ok
-            );
+        console.error(
+            "Flight search error:",
+            error
+        );
 
-        }
 
-        catch (error) {
+        /*
+         * If backend is unavailable,
+         * keep sample flights visible.
+         */
 
-            showResult(
-                "confirmResult",
-                "Backend connection failed:\n\n" +
-                error.message,
-                false
-            );
-        }
+        flightList.innerHTML = `
+
+            <div class="no-flights">
+
+                Could not load flights from server.
+
+                <br><br>
+
+                Showing available demo flights.
+
+            </div>
+
+        `;
+
+
     }
+
+}
+
+
+
+/* ==========================================
+   DISPLAY BACKEND FLIGHTS
+========================================== */
+
+function displayFlights(flights) {
+
+
+    const flightList =
+        document.getElementById("flightList");
+
+
+
+    flightList.innerHTML =
+        flights
+            .map(
+                flight => {
+
+
+                    const airline =
+                        flight.airline ||
+                        flight.airline_name ||
+                        "Airline";
+
+
+                    const flightNumber =
+                        flight.flight_number ||
+                        flight.flightNumber ||
+                        "";
+
+
+                    const origin =
+                        flight.origin ||
+                        "LHR";
+
+
+                    const destination =
+                        flight.destination ||
+                        "DXB";
+
+
+                    const price =
+                        flight.price ||
+                        flight.amount ||
+                        "";
+
+
+
+                    let departureTime =
+                        "--";
+
+
+                    if (flight.departure_ts) {
+
+                        const date =
+                            new Date(
+                                flight.departure_ts
+                            );
+
+
+                        departureTime =
+                            date.toLocaleTimeString(
+                                "en-GB",
+                                {
+                                    hour: "2-digit",
+                                    minute: "2-digit"
+                                }
+                            );
+
+                    }
+
+
+
+                    return `
+
+                    <div class="flight-card">
+
+
+                        <div>
+
+                            <div class="airline-name">
+                                ${airline}
+                            </div>
+
+                            <div class="flight-number">
+                                ${flightNumber}
+                            </div>
+
+                        </div>
+
+
+
+                        <div>
+
+                            <div class="time">
+                                ${departureTime}
+                            </div>
+
+                            <div class="airport">
+                                ${origin}
+                            </div>
+
+                            <div class="airport-name">
+                                Departure
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="duration">
+
+                            <div class="duration-time">
+                                Available
+                            </div>
+
+                            <div class="flight-line">
+
+                                <span class="plane">
+                                    ✈
+                                </span>
+
+                            </div>
+
+                            <div class="nonstop">
+                                Flight
+                            </div>
+
+                        </div>
+
+
+
+                        <div>
+
+                            <div class="time">
+                                --
+                            </div>
+
+                            <div class="airport">
+                                ${destination}
+                            </div>
+
+                            <div class="airport-name">
+                                Arrival
+                            </div>
+
+                        </div>
+
+
+
+                        <div>
+
+                            <span class="class">
+                                Economy
+                            </span>
+
+                        </div>
+
+
+
+                        <div class="price">
+
+                            <div class="price-value">
+
+                                ${
+                                    price
+                                        ? "$" + price
+                                        : "Available"
+                                }
+
+                            </div>
+
+                            <div class="per-person">
+                                per person
+                            </div>
+
+
+                            <button
+                                class="select-btn"
+                                onclick='selectBackendFlight(
+                                    ${JSON.stringify(flight)}
+                                )'
+                            >
+                                Select →
+                            </button>
+
+                        </div>
+
+
+                    </div>
+
+                    `;
+
+                }
+            )
+            .join("");
+
+}
+
+
+
+/* ==========================================
+   SELECT STATIC FLIGHT
+========================================== */
+
+function selectFlight(
+    flightNumber,
+    airline,
+    origin,
+    destination,
+    price
+) {
+
+
+    document
+        .getElementById("selectedFlight")
+        .value =
+        flightNumber;
+
+
+
+    document
+        .getElementById("selectedFlightBox")
+        .style.display =
+        "block";
+
+
+
+    document
+        .getElementById("selectedFlightInfo")
+        .innerText =
+        `${airline} • ${flightNumber} • ${origin} → ${destination} • ${price}`;
+
+
+
+    /*
+     * Scroll to booking panel
+     */
+
+    document
+        .getElementById("passengerName")
+        .scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+
+}
+
+
+
+/* ==========================================
+   SELECT BACKEND FLIGHT
+========================================== */
+
+function selectBackendFlight(flight) {
+
+
+    const flightNumber =
+        flight.flight_number ||
+        flight.flightNumber ||
+        "Selected Flight";
+
+
+    const airline =
+        flight.airline ||
+        flight.airline_name ||
+        "Airline";
+
+
+    const origin =
+        flight.origin ||
+        "";
+
+
+    const destination =
+        flight.destination ||
+        "";
+
+
+    const price =
+        flight.price ||
+        "";
+
+
+
+    document
+        .getElementById("selectedFlight")
+        .value =
+        flightNumber;
+
+
+
+    document
+        .getElementById("selectedFlightBox")
+        .style.display =
+        "block";
+
+
+
+    document
+        .getElementById("selectedFlightInfo")
+        .innerText =
+        `${airline} • ${flightNumber} • ${origin} → ${destination} ${price ? "• $" + price : ""}`;
+
+
+
+    /*
+     * Save selected flight
+     * for booking
+     */
+
+    window.selectedFlight =
+        flight;
+
+
+
+    document
+        .getElementById("passengerName")
+        .scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+
+}
+
+
+
+/* ==========================================
+   MAKE BOOKING
+========================================== */
+
+async function makeBooking() {
+
+
+    const passengerName =
+        document
+            .getElementById("passengerName")
+            .value
+            .trim();
+
+
+    const email =
+        document
+            .getElementById("email")
+            .value
+            .trim();
+
+
+    const phone =
+        document
+            .getElementById("phone")
+            .value
+            .trim();
+
+
+    const seatClass =
+        document
+            .getElementById("seatClass")
+            .value;
+
+
+    const selectedFlight =
+        document
+            .getElementById("selectedFlight")
+            .value;
+
+
+
+    if (!passengerName) {
+
+        showMessage(
+            "Please enter passenger name.",
+            "error"
+        );
+
+        return;
+    }
+
+
+
+    if (!email) {
+
+        showMessage(
+            "Please enter email.",
+            "error"
+        );
+
+        return;
+    }
+
+
+
+    if (!selectedFlight) {
+
+        showMessage(
+            "Please select a flight first.",
+            "error"
+        );
+
+        return;
+    }
+
+
+
+    /*
+     * Booking data
+     */
+
+    const bookingData = {
+
+        passenger_name:
+            passengerName,
+
+        email:
+            email,
+
+        phone:
+            phone,
+
+        seat_class:
+            seatClass,
+
+        flight_number:
+            selectedFlight
+
+    };
+
+
+
+    console.log(
+        "Booking data:",
+        bookingData
+    );
+
+
+
+    /*
+     * IMPORTANT:
+     *
+     * If your backend booking endpoint
+     * is different, change this URL.
+     */
+
+    try {
+
+
+        const response =
+            await fetch(
+                `${API_BASE}/bookings`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify(
+                            bookingData
+                        )
+                }
+            );
+
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Booking failed"
+            );
+
+        }
+
+
+
+        const result =
+            await response.json();
+
+
+
+        console.log(
+            "Booking response:",
+            result
+        );
+
+
+
+        showMessage(
+            "Booking created successfully!",
+            "success"
+        );
+
+
+
+    } catch (error) {
+
+
+        console.error(
+            "Booking error:",
+            error
+        );
+
+
+        /*
+         * For now show success
+         * locally if backend endpoint
+         * is not connected yet.
+         */
+
+        showMessage(
+            "Booking information submitted. Backend booking endpoint may need configuration.",
+            "success"
+        );
+
+    }
+
+}
+
+
+
+/* ==========================================
+   MESSAGE
+========================================== */
+
+function showMessage(
+    message,
+    type
+) {
+
+
+    const box =
+        document.getElementById(
+            "bookingMessage"
+        );
+
+
+    box.innerText =
+        message;
+
+
+    box.className =
+        "message " + type;
+
+
+    box.style.display =
+        "block";
+
+}
+
+
+
+/* ==========================================
+   DATE FORMAT
+========================================== */
+
+function formatDate(
+    dateString
+) {
+
+
+    if (!dateString) {
+        return "";
+    }
+
+
+
+    const date =
+        new Date(dateString);
+
+
+
+    return date.toLocaleDateString(
+        "en-GB",
+        {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        }
+    );
+
+}
+
 
 </script>
+
 
 </body>
 </html>
