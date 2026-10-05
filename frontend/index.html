@@ -1,217 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Flight Management System</title>
+    <title>Flight Booking System</title>
 
     <style>
-        :root {
-            --navy: #0b1f3a;
-            --navy-light: #13294f;
-            --amber: #f2a541;
-            --cream: #f7f5f0;
-            --white: #ffffff;
-            --green: #239b5b;
-            --red: #c94a3b;
-            --gray: #667085;
-            --border: #dedede;
-        }
-
         * {
             box-sizing: border-box;
         }
 
         body {
             margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: var(--cream);
-            color: var(--navy);
+            font-family: Arial, sans-serif;
+            background: #f7f5f1;
+            color: #0b2545;
         }
 
+        /* HEADER */
         header {
-            background: var(--navy);
+            background: #0b2545;
             color: white;
             padding: 18px 35px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 20px;
         }
 
-        .logo {
-            font-size: 25px;
-            font-weight: bold;
+        .brand {
+            font-size: 30px;
+            font-weight: 800;
         }
 
-        .logo span {
-            color: var(--amber);
+        .brand span {
+            color: #f6a623;
         }
 
-        .customer {
-            background: rgba(255,255,255,0.12);
-            padding: 9px 15px;
-            border-radius: 20px;
+        nav {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 35px auto;
-            padding: 0 20px;
+        nav a {
+            color: white;
+            text-decoration: none;
+            background: #29415f;
+            padding: 12px 18px;
+            border-radius: 25px;
+            font-weight: 700;
+        }
+
+        nav a:hover {
+            background: #3b5878;
+        }
+
+        nav a.customer {
+            background: #f6a623;
+            color: #0b2545;
+        }
+
+        .role {
+            background: #29415f;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 25px;
+            font-weight: 700;
+        }
+
+        /* MAIN */
+        main {
+            max-width: 1500px;
+            margin: auto;
+            padding: 45px 25px;
         }
 
         h1 {
-            margin-bottom: 5px;
+            font-size: 46px;
+            margin: 0 0 15px;
+        }
+
+        h2 {
+            font-size: 31px;
+            margin-top: 0;
         }
 
         .subtitle {
-            color: var(--gray);
+            font-size: 20px;
+            color: #5d7390;
+            margin-bottom: 25px;
+        }
+
+        /* NOTICE */
+        .notice {
+            background: #fff8e8;
+            border: 1px solid #efc96c;
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin-bottom: 28px;
+            font-size: 18px;
+        }
+
+        /* CARDS */
+        .card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 7px 22px rgba(0, 0, 0, 0.05);
         }
 
         .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 25px;
-            margin-top: 25px;
         }
 
-        .card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        .two {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
 
-        .full {
-            grid-column: 1 / -1;
-        }
-
-        h2 {
-            margin-top: 0;
-        }
-
+        /* FORM */
         label {
             display: block;
-            margin-top: 14px;
-            margin-bottom: 7px;
-            font-weight: bold;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 17px 0 8px;
         }
 
         input,
         select {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             border: 1px solid #ccc;
-            border-radius: 7px;
-            font-size: 15px;
+            border-radius: 10px;
+            font-size: 17px;
+            background: white;
         }
 
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #0b2545;
+        }
+
+        /* BUTTONS */
         button {
-            border: none;
-            border-radius: 7px;
-            padding: 12px 18px;
-            font-size: 15px;
-            font-weight: bold;
+            border: 0;
+            border-radius: 10px;
+            padding: 14px 21px;
+            background: #0b2545;
+            color: white;
+            font-size: 17px;
+            font-weight: 700;
             cursor: pointer;
             margin-top: 18px;
-        }
-
-        .primary {
-            background: var(--navy);
-            color: white;
-        }
-
-        .secondary {
-            background: #edf1f7;
-            color: var(--navy);
-        }
-
-        .danger {
-            background: var(--red);
-            color: white;
         }
 
         button:hover {
             opacity: 0.9;
         }
 
+        .danger {
+            background: #cf4938;
+            margin-left: 10px;
+        }
+
+        .light {
+            background: #eaf0f7;
+            color: #0b2545;
+        }
+
+        /* RESULTS */
         .result {
             margin-top: 18px;
             padding: 15px;
-            border-radius: 8px;
-            background: #f5f6f8;
-            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #f2f6fa;
             white-space: pre-wrap;
-            line-height: 1.6;
-        }
-
-        .success {
-            background: #edf9f2;
-            border-color: #a9dfbd;
-            color: #176b3d;
-        }
-
-        .error {
-            background: #fff0ee;
-            border-color: #efaaa1;
-            color: #a32f26;
+            overflow: auto;
+            min-height: 50px;
         }
 
         .flight {
-            border: 1px solid var(--border);
-            padding: 18px;
-            margin-top: 12px;
-            border-radius: 8px;
-            background: white;
-            cursor: pointer;
-        }
-
-        .flight:hover {
-            border-color: var(--amber);
-        }
-
-        .flight-title {
-            font-size: 19px;
-            font-weight: bold;
-        }
-
-        .muted {
-            color: var(--gray);
-            margin-top: 5px;
-        }
-
-        .booking-id {
-            font-size: 28px;
-            font-weight: bold;
-            color: var(--green);
-        }
-
-        .notice {
-            background: #fff8e7;
-            border: 1px solid #efd18e;
+            border: 1px solid #ddd;
+            border-radius: 10px;
             padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
+            margin: 10px 0;
+            background: white;
         }
 
-        .hidden {
-            display: none;
+        .flight button {
+            margin-top: 10px;
         }
 
-        @media(max-width: 800px) {
+        .selected {
+            background: #e8f3ff;
+            border: 2px solid #0b2545;
+        }
 
-            .grid {
+        .small {
+            color: #65788f;
+        }
+
+        /* QUICK NAVIGATION */
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        .quick-link {
+            display: block;
+            text-decoration: none;
+            padding: 20px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 14px;
+            color: #0b2545;
+            font-weight: 700;
+            font-size: 18px;
+            text-align: center;
+            box-shadow: 0 5px 18px rgba(0,0,0,0.04);
+        }
+
+        .quick-link:hover {
+            background: #eef4fa;
+        }
+
+        .quick-link span {
+            display: block;
+            font-size: 14px;
+            color: #65788f;
+            margin-top: 6px;
+            font-weight: normal;
+        }
+
+        /* MOBILE */
+        @media (max-width: 850px) {
+
+            .grid,
+            .two,
+            .quick-links {
                 grid-template-columns: 1fr;
             }
 
-            .full {
-                grid-column: auto;
+            header {
+                flex-direction: column;
+                align-items: flex-start;
             }
 
-            header {
-                padding: 15px 20px;
+            nav {
+                width: 100%;
+            }
+
+            nav a,
+            .role {
+                font-size: 14px;
+            }
+
+            h1 {
+                font-size: 37px;
+            }
+
+            .danger {
+                margin-left: 0;
             }
         }
     </style>
@@ -219,102 +279,184 @@
 
 <body>
 
+<!-- ================= HEADER ================= -->
+
 <header>
 
-    <div class="logo">
+    <div class="brand">
         Flight<span>Mgmt</span>
     </div>
 
-    <div class="customer">
-        Customer Booking
-    </div>
+    <nav>
+
+        <a href="index.html" class="customer">
+            Customer Booking
+        </a>
+
+        <a href="ops_agent.html">
+            Ops Agent
+        </a>
+
+        <a href="admin.html">
+            Super Admin
+        </a>
+
+        <span class="role">
+            Role: customer
+        </span>
+
+    </nav>
 
 </header>
 
 
-<div class="container">
+<!-- ================= MAIN ================= -->
+
+<main>
 
     <h1>Flight Booking System</h1>
 
-    <p class="subtitle">
+    <div class="subtitle">
         Search available flights and make your reservation.
-    </p>
+    </div>
 
+
+    <!-- ROLE NOTICE -->
 
     <div class="notice">
 
-        <strong>Customer:</strong>
+        <b>Customer:</b>
 
-        Search a flight, select a flight, provide passenger information,
-        and hold your seat.
+        Search a flight, select a flight, provide passenger
+        information, and hold your seat.
+
+        <br><br>
+
+        <b>Other Dashboards:</b>
+
+        Use <b>Ops Agent</b> for booking operations or
+        <b>Super Admin</b> for flight management.
 
     </div>
 
 
-    <div class="grid">
+    <!-- ================= QUICK NAVIGATION ================= -->
+
+    <div class="quick-links">
+
+        <a href="index.html" class="quick-link">
+            ✈ Customer Booking
+            <span>Search and book flights</span>
+        </a>
+
+        <a href="ops_agent.html" class="quick-link">
+            ⚙ Ops Agent
+            <span>Hold, confirm and cancel bookings</span>
+        </a>
+
+        <a href="admin.html" class="quick-link">
+            👑 Super Admin
+            <span>Create and cancel flights</span>
+        </a>
+
+    </div>
 
 
-        <!-- =====================================================
-             SEARCH FLIGHTS
-        ====================================================== -->
+    <!-- ================= SEARCH FLIGHTS ================= -->
 
-        <div class="card full">
+    <div class="card">
 
-            <h2>Search Flights</h2>
+        <h2>Search Flights</h2>
 
-            <label>Origin</label>
+        <div class="two">
 
-            <input
-                id="origin"
-                type="text"
-                placeholder="Example: LHR"
-            >
+            <div>
 
+                <label for="origin">
+                    Origin
+                </label>
 
-            <label>Destination</label>
+                <input
+                    id="origin"
+                    type="text"
+                    placeholder="Example: LHR"
+                >
 
-            <input
-                id="destination"
-                type="text"
-                placeholder="Example: DXB"
-            >
+            </div>
 
 
-            <label>Date</label>
+            <div>
 
-            <input
-                id="date"
-                type="date"
-            >
+                <label for="destination">
+                    Destination
+                </label>
 
+                <input
+                    id="destination"
+                    type="text"
+                    placeholder="Example: DXB"
+                >
 
-            <button
-                class="primary"
-                onclick="searchFlights()"
-            >
-                Search Flights
-            </button>
-
-
-            <div id="searchResult"></div>
+            </div>
 
         </div>
 
 
-        <!-- =====================================================
-             PASSENGER INFORMATION
-        ====================================================== -->
+        <label for="date">
+            Date
+        </label>
+
+        <input
+            id="date"
+            type="date"
+        >
+
+
+        <br>
+
+        <button onclick="searchFlights()">
+            Search Flights
+        </button>
+
+
+        <div
+            id="searchResult"
+            class="result"
+        >
+            Search results will appear here.
+        </div>
+
+    </div>
+
+
+    <!-- ================= BOOKING ================= -->
+
+    <div class="grid">
+
+
+        <!-- PASSENGER -->
 
         <div class="card">
 
-            <h2>Passenger Information</h2>
-
-            <p class="muted">
-                Enter your passenger ID.
-            </p>
+            <h2>
+                Passenger & Booking
+            </h2>
 
 
-            <label>Passenger ID</label>
+            <label for="flightId">
+                Selected Flight ID
+            </label>
+
+            <input
+                id="flightId"
+                type="number"
+                placeholder="Select a flight"
+            >
+
+
+            <label for="passengerId">
+                Passenger ID
+            </label>
 
             <input
                 id="passengerId"
@@ -323,51 +465,47 @@
             >
 
 
-            <label>Selected Flight ID</label>
-
-            <input
-                id="flightId"
-                type="number"
-                placeholder="Select a flight"
-                readonly
-            >
-
-
-            <label>Seat Class</label>
+            <label for="seatClass">
+                Seat Class
+            </label>
 
             <select id="seatClass">
 
-                <option value="economy">
+                <option value="Economy">
                     Economy
                 </option>
 
-                <option value="business">
+                <option value="Business">
                     Business
                 </option>
 
-                <option value="first">
+                <option value="First">
                     First
                 </option>
 
             </select>
 
 
-            <label>Fare</label>
+            <label for="fare">
+                Fare
+            </label>
 
             <select id="fare">
 
-                <option value="flexible">
+                <option value="Flexible">
                     Flexible
                 </option>
 
-                <option value="basic_economy">
-                    Basic Economy
+                <option value="Standard">
+                    Standard
                 </option>
 
             </select>
 
 
-            <label>Requested Seat (Optional)</label>
+            <label for="requestedSeat">
+                Requested Seat (Optional)
+            </label>
 
             <input
                 id="requestedSeat"
@@ -376,46 +514,42 @@
             >
 
 
-            <button
-                class="primary"
-                onclick="holdSeat()"
-            >
+            <button onclick="holdSeat()">
                 Hold Seat
             </button>
 
 
-            <div id="holdResult"></div>
+            <div
+                id="bookingResult"
+                class="result"
+            >
+                Booking result will appear here.
+            </div>
 
         </div>
 
 
-        <!-- =====================================================
-             BOOKING RESULT
-        ====================================================== -->
+        <!-- BOOKING STATUS -->
 
         <div class="card">
 
-            <h2>Booking</h2>
-
-            <p class="muted">
-                Your Booking ID will appear here after successfully
-                holding a seat.
-            </p>
+            <h2>
+                Booking Status
+            </h2>
 
 
-            <div id="bookingBox">
+            <label for="bookingId">
+                Booking ID
+            </label>
 
-                <p>
-                    No booking created yet.
-                </p>
-
-            </div>
-
-
-            <button
-                class="primary"
-                onclick="confirmBooking()"
+            <input
+                id="bookingId"
+                type="number"
+                placeholder="Example: 48"
             >
+
+
+            <button onclick="confirmBooking()">
                 Confirm Booking
             </button>
 
@@ -428,631 +562,422 @@
             </button>
 
 
-            <div id="bookingResult"></div>
-
-        </div>
-
-
-        <!-- =====================================================
-             SEAT MAP
-        ====================================================== -->
-
-        <div class="card full">
-
-            <h2>Seat Map</h2>
-
-            <p class="muted">
-                View available and occupied seats for the selected flight.
-            </p>
-
-
-            <button
-                class="secondary"
-                onclick="loadSeatMap()"
+            <div
+                id="statusResult"
+                class="result"
             >
-                Load Seat Map
-            </button>
-
-
-            <div id="seatMapResult"></div>
+                Booking status will appear here.
+            </div>
 
         </div>
-
 
     </div>
 
-</div>
 
+    <!-- ================= SEAT MAP ================= -->
+
+    <div class="card">
+
+        <h2>
+            Seat Map
+        </h2>
+
+        <p class="small">
+            View available and occupied seats for the selected flight.
+        </p>
+
+
+        <label for="seatMapFlightId">
+            Flight ID
+        </label>
+
+        <input
+            id="seatMapFlightId"
+            type="number"
+            placeholder="Example: 15"
+        >
+
+
+        <button
+            class="light"
+            onclick="loadSeatMap()"
+        >
+            Load Seat Map
+        </button>
+
+
+        <div
+            id="seatMapResult"
+            class="result"
+        >
+            Seat map will appear here.
+        </div>
+
+    </div>
+
+</main>
+
+
+<!-- ================= JAVASCRIPT ================= -->
 
 <script>
 
-/* ============================================================
-   BACKEND
-============================================================ */
+    const API_BASE =
+        "https://flight-management-capstone.onrender.com";
 
-const API_BASE =
-    "https://flight-management-capstone.onrender.com";
 
+    /* ================= API HELPER ================= */
 
-/* ============================================================
-   GLOBAL BOOKING ID
-============================================================ */
+    async function api(url, options = {}) {
 
-let currentBookingId = null;
+        try {
 
+            const response =
+                await fetch(API_BASE + url, options);
 
-/* ============================================================
-   SHOW RESULT
-============================================================ */
+            const text =
+                await response.text();
 
-function showResult(elementId, message, success = true) {
+            let data;
 
-    const element =
-        document.getElementById(elementId);
+            try {
 
-    element.className =
-        success
-        ? "result success"
-        : "result error";
+                data =
+                    JSON.parse(text);
 
-    element.textContent = message;
-}
+            } catch {
 
+                data = text;
 
-/* ============================================================
-   SEARCH FLIGHTS
-============================================================ */
+            }
 
-async function searchFlights() {
 
-    const origin =
-        document
-        .getElementById("origin")
-        .value
-        .trim()
-        .toUpperCase();
+            if (!response.ok) {
 
-
-    const destination =
-        document
-        .getElementById("destination")
-        .value
-        .trim()
-        .toUpperCase();
-
-
-    const date =
-        document
-        .getElementById("date")
-        .value;
-
-
-    if (!origin || !destination || !date) {
-
-        showResult(
-            "searchResult",
-            "Please enter Origin, Destination and Date.",
-            false
-        );
-
-        return;
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                `${API_BASE}/search?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&date=${encodeURIComponent(date)}`
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (!response.ok) {
-
-            showResult(
-                "searchResult",
-                data.detail ||
-                JSON.stringify(data),
-                false
-            );
-
-            return;
-        }
-
-
-        displayFlights(data);
-
-    }
-
-    catch(error) {
-
-        showResult(
-            "searchResult",
-            "Backend connection failed: " +
-            error.message,
-            false
-        );
-    }
-}
-
-
-/* ============================================================
-   DISPLAY FLIGHTS
-============================================================ */
-
-function displayFlights(data) {
-
-    const result =
-        document.getElementById("searchResult");
-
-
-    const flights =
-        Array.isArray(data)
-        ? data
-        : data.flights ||
-          data.results ||
-          [];
-
-
-    if (!flights.length) {
-
-        result.className = "result";
-
-        result.innerHTML =
-            "<strong>No flights found.</strong>";
-
-        return;
-    }
-
-
-    result.className = "result";
-
-    result.innerHTML =
-        `<strong>${flights.length} flight(s) found</strong>`;
-
-
-    flights.forEach(flight => {
-
-        const div =
-            document.createElement("div");
-
-        div.className = "flight";
-
-
-        div.innerHTML = `
-
-            <div class="flight-title">
-
-                ${flight.origin || ""}
-
-                →
-
-                ${flight.destination || ""}
-
-            </div>
-
-
-            <div class="muted">
-
-                Flight ID:
-                <strong>
-                    ${flight.flight_id ?? ""}
-                </strong>
-
-            </div>
-
-
-            <div class="muted">
-
-                Flight Number:
-                <strong>
-                    ${flight.flight_number || ""}
-                </strong>
-
-            </div>
-
-
-            <div class="muted">
-
-                Departure:
-                ${flight.departure_ts || ""}
-
-            </div>
-
-        `;
-
-
-        div.onclick = function() {
-
-            if (flight.flight_id) {
-
-                document
-                .getElementById("flightId")
-                .value =
-                    flight.flight_id;
-
-                showResult(
-                    "searchResult",
-                    `Flight ${flight.flight_id} selected.`,
-                    true
+                throw new Error(
+                    typeof data === "string"
+                        ? data
+                        : JSON.stringify(data, null, 2)
                 );
 
             }
 
+
+            return data;
+
+        } catch (error) {
+
+            throw error;
+
+        }
+
+    }
+
+
+    /* ================= OUTPUT ================= */
+
+    function showResult(elementId, data) {
+
+        document.getElementById(elementId).textContent =
+            typeof data === "string"
+                ? data
+                : JSON.stringify(data, null, 2);
+
+    }
+
+
+    /* ================= SEARCH FLIGHTS ================= */
+
+    async function searchFlights() {
+
+        const origin =
+            document
+                .getElementById("origin")
+                .value
+                .trim()
+                .toUpperCase();
+
+        const destination =
+            document
+                .getElementById("destination")
+                .value
+                .trim()
+                .toUpperCase();
+
+        const date =
+            document
+                .getElementById("date")
+                .value;
+
+
+        if (!origin || !destination || !date) {
+
+            showResult(
+                "searchResult",
+                "Please enter Origin, Destination and Date."
+            );
+
+            return;
+        }
+
+
+        showResult(
+            "searchResult",
+            "Searching flights..."
+        );
+
+
+        try {
+
+            const result =
+                await api(
+                    `/search?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&date=${encodeURIComponent(date)}`
+                );
+
+
+            const flights =
+                result.flights || result || [];
+
+
+            if (
+                !Array.isArray(flights) ||
+                flights.length === 0
+            ) {
+
+                showResult(
+                    "searchResult",
+                    "No flights found."
+                );
+
+                return;
+            }
+
+
+            document
+                .getElementById("searchResult")
+                .innerHTML = flights.map(
+                    flight => `
+
+                    <div class="flight">
+
+                        <b>
+                            Flight:
+                            ${flight.flight_number || "N/A"}
+                        </b>
+
+                        <br>
+
+                        Flight ID:
+                        ${flight.flight_id ?? "N/A"}
+
+                        <br>
+
+                        Route:
+                        ${flight.origin || origin}
+                        →
+                        ${flight.destination || destination}
+
+                        <br>
+
+                        Departure:
+                        ${flight.departure_ts || "N/A"}
+
+                        <br>
+
+                        <button
+                            onclick="selectFlight(${flight.flight_id})"
+                        >
+                            Select Flight
+                        </button>
+
+                    </div>
+
+                `
+                ).join("");
+
+        } catch (error) {
+
+            showResult(
+                "searchResult",
+                "Search failed: " + error.message
+            );
+
+        }
+
+    }
+
+
+    /* ================= SELECT FLIGHT ================= */
+
+    function selectFlight(id) {
+
+        document
+            .getElementById("flightId")
+            .value = id;
+
+
+        document
+            .getElementById("seatMapFlightId")
+            .value = id;
+
+
+        document
+            .getElementById("bookingResult")
+            .textContent =
+                "Flight " + id + " selected.";
+
+    }
+
+
+    /* ================= HOLD SEAT ================= */
+
+    async function holdSeat() {
+
+        const flightId =
+            Number(
+                document
+                    .getElementById("flightId")
+                    .value
+            );
+
+        const passengerId =
+            Number(
+                document
+                    .getElementById("passengerId")
+                    .value
+            );
+
+        const seatClass =
+            document
+                .getElementById("seatClass")
+                .value;
+
+        const fare =
+            document
+                .getElementById("fare")
+                .value;
+
+        const requestedSeat =
+            document
+                .getElementById("requestedSeat")
+                .value
+                .trim();
+
+
+        if (!flightId || !passengerId) {
+
+            showResult(
+                "bookingResult",
+                "Flight ID and Passenger ID are required."
+            );
+
+            return;
+        }
+
+
+        const bookingData = {
+
+            flight_id: flightId,
+
+            passenger_id: passengerId,
+
+            seat_class: seatClass,
+
+            fare: fare
+
         };
 
 
-        result.appendChild(div);
+        if (requestedSeat) {
 
-    });
-}
+            bookingData.requested_seat_number =
+                requestedSeat;
 
-
-/* ============================================================
-   HOLD SEAT
-============================================================ */
-
-async function holdSeat() {
-
-    const flightId =
-        Number(
-            document
-            .getElementById("flightId")
-            .value
-        );
-
-
-    const passengerId =
-        Number(
-            document
-            .getElementById("passengerId")
-            .value
-        );
-
-
-    const seatClass =
-        document
-        .getElementById("seatClass")
-        .value;
-
-
-    const fare =
-        document
-        .getElementById("fare")
-        .value;
-
-
-    const requestedSeat =
-        document
-        .getElementById("requestedSeat")
-        .value
-        .trim();
-
-
-    if (!flightId) {
-
-        showResult(
-            "holdResult",
-            "Please search and select a flight first.",
-            false
-        );
-
-        return;
-    }
-
-
-    if (!passengerId) {
-
-        showResult(
-            "holdResult",
-            "Please enter Passenger ID.",
-            false
-        );
-
-        return;
-    }
-
-
-    const body = {
-
-        flight_id: flightId,
-
-        passenger_id: passengerId,
-
-        seat_class: seatClass,
-
-        fare: fare
-
-    };
-
-
-    if (requestedSeat) {
-
-        body.requested_seat_number =
-            requestedSeat;
-
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                `${API_BASE}/bookings`,
-                {
-
-                    method: "POST",
-
-                    headers: {
-
-                        "Content-Type":
-                            "application/json",
-
-                        "Idempotency-Key":
-                            "customer-hold-" +
-                            Date.now()
-
-                    },
-
-                    body:
-                        JSON.stringify(body)
-
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (!response.ok) {
-
-            showResult(
-                "holdResult",
-                data.detail ||
-                JSON.stringify(data),
-                false
-            );
-
-            return;
         }
 
 
-        currentBookingId =
-            data.booking_id;
-
-
-        showResult(
-            "holdResult",
-
-            `Booking created successfully!
-
-Booking ID: #${data.booking_id}
-
-Status: ${data.status}
-
-Price: USD ${data.price ?? ""}
-
-Hold expires in:
-${data.hold_expires_in_minutes ?? 15} minutes`,
-
-            true
-        );
-
-
-        document
-        .getElementById("bookingBox")
-        .innerHTML = `
-
-            <p>Booking ID</p>
-
-            <div class="booking-id">
-                #${data.booking_id}
-            </div>
-
-            <p>
-                Status:
-                <strong>${data.status}</strong>
-            </p>
-
-            <p>
-                Price:
-                <strong>
-                    USD ${data.price ?? ""}
-                </strong>
-            </p>
-
-        `;
-
-    }
-
-    catch(error) {
-
-        showResult(
-            "holdResult",
-            "Backend connection failed: " +
-            error.message,
-            false
-        );
-    }
-}
-
-
-/* ============================================================
-   CONFIRM BOOKING
-============================================================ */
-
-async function confirmBooking() {
-
-    if (!currentBookingId) {
-
         showResult(
             "bookingResult",
-            "No Booking ID available. Please hold a seat first.",
-            false
+            "Holding seat..."
         );
 
-        return;
-    }
 
+        try {
 
-    try {
+            const result =
+                await api(
+                    "/bookings",
+                    {
+                        method: "POST",
 
-        const response =
-            await fetch(
-                `${API_BASE}/bookings/${currentBookingId}/confirm`,
-                {
+                        headers: {
 
-                    method: "POST",
+                            "Content-Type":
+                                "application/json",
 
-                    headers: {
+                            "Idempotency-Key":
+                                "customer-" +
+                                Date.now()
 
-                        "Idempotency-Key":
-                            "customer-confirm-" +
-                            Date.now()
+                        },
+
+                        body:
+                            JSON.stringify(
+                                bookingData
+                            )
 
                     }
-
-                }
-            );
+                );
 
 
-        const data =
-            await response.json();
+            /* AUTOMATIC BOOKING ID */
 
+            if (result.booking_id) {
 
-        if (!response.ok) {
+                document
+                    .getElementById("bookingId")
+                    .value =
+                        result.booking_id;
+
+            }
+
 
             showResult(
                 "bookingResult",
-                data.detail ||
-                JSON.stringify(data),
-                false
-            );
-
-            return;
-        }
-
-
-        showResult(
-
-            "bookingResult",
-
-            `Booking #${data.booking_id}
-
-Status: CONFIRMED
-
-Amount Paid:
-USD ${data.amount_paid}`,
-
-            true
-
-        );
-
-
-        document
-        .getElementById("bookingBox")
-        .innerHTML = `
-
-            <p>Booking ID</p>
-
-            <div class="booking-id">
-                #${data.booking_id}
-            </div>
-
-            <p>
-                Status:
-                <strong>CONFIRMED</strong>
-            </p>
-
-            <p>
-                Amount Paid:
-                <strong>
-                    USD ${data.amount_paid}
-                </strong>
-            </p>
-
-        `;
-
-    }
-
-    catch(error) {
-
-        showResult(
-            "bookingResult",
-            "Backend connection failed: " +
-            error.message,
-            false
-        );
-    }
-}
-
-
-/* ============================================================
-   CANCEL BOOKING
-============================================================ */
-
-async function cancelBooking() {
-
-    if (!currentBookingId) {
-
-        showResult(
-            "bookingResult",
-            "No Booking ID available.",
-            false
-        );
-
-        return;
-    }
-
-
-    const confirmed =
-        confirm(
-            `Are you sure you want to cancel Booking #${currentBookingId}?`
-        );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                `${API_BASE}/bookings/${currentBookingId}/cancel`,
-                {
-
-                    method: "POST",
-
-                    headers: {
-
-                        "Idempotency-Key":
-                            "customer-cancel-" +
-                            Date.now()
-
-                    }
-
-                }
+                result
             );
 
 
-        const data =
-            await response.json();
-
-
-        if (!response.ok) {
+        } catch (error) {
 
             showResult(
                 "bookingResult",
-                data.detail ||
-                JSON.stringify(data),
-                false
+                "Hold failed: " +
+                error.message
+            );
+
+        }
+
+    }
+
+
+    /* ================= CONFIRM BOOKING ================= */
+
+    async function confirmBooking() {
+
+        const bookingId =
+            Number(
+                document
+                    .getElementById("bookingId")
+                    .value
+            );
+
+
+        if (!bookingId) {
+
+            showResult(
+                "statusResult",
+                "Please enter Booking ID."
             );
 
             return;
@@ -1060,161 +985,165 @@ async function cancelBooking() {
 
 
         showResult(
-
-            "bookingResult",
-
-            `Booking #${data.booking_id}
-
-Status: CANCELLED
-
-Refund:
-USD ${data.refund_amount ?? 0}
-
-Reason:
-${data.reason ?? ""}`,
-
-            true
-
+            "statusResult",
+            "Confirming booking..."
         );
 
 
-        document
-        .getElementById("bookingBox")
-        .innerHTML = `
+        try {
 
-            <p>Booking ID</p>
-
-            <div class="booking-id">
-                #${data.booking_id}
-            </div>
-
-            <p>
-                Status:
-                <strong>CANCELLED</strong>
-            </p>
-
-        `;
-
-    }
-
-    catch(error) {
-
-        showResult(
-            "bookingResult",
-            "Backend connection failed: " +
-            error.message,
-            false
-        );
-    }
-}
+            const result =
+                await api(
+                    `/bookings/${bookingId}/confirm`,
+                    {
+                        method: "POST"
+                    }
+                );
 
 
-/* ============================================================
-   SEAT MAP
-============================================================ */
-
-async function loadSeatMap() {
-
-    const flightId =
-        Number(
-            document
-            .getElementById("flightId")
-            .value
-        );
-
-
-    if (!flightId) {
-
-        showResult(
-            "seatMapResult",
-            "Please search and select a flight first.",
-            false
-        );
-
-        return;
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                `${API_BASE}/flights/${flightId}/seatmap`
+            showResult(
+                "statusResult",
+                result
             );
 
 
-        const data =
-            await response.json();
+        } catch (error) {
+
+            showResult(
+                "statusResult",
+                "Confirm failed: " +
+                error.message
+            );
+
+        }
+
+    }
 
 
-        if (!response.ok) {
+    /* ================= CANCEL BOOKING ================= */
+
+    async function cancelBooking() {
+
+        const bookingId =
+            Number(
+                document
+                    .getElementById("bookingId")
+                    .value
+            );
+
+
+        if (!bookingId) {
+
+            showResult(
+                "statusResult",
+                "Please enter Booking ID."
+            );
+
+            return;
+        }
+
+
+        if (
+            !confirm(
+                "Are you sure you want to cancel this booking?"
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        showResult(
+            "statusResult",
+            "Cancelling booking..."
+        );
+
+
+        try {
+
+            const result =
+                await api(
+                    `/bookings/${bookingId}/cancel`,
+                    {
+                        method: "POST"
+                    }
+                );
+
+
+            showResult(
+                "statusResult",
+                result
+            );
+
+
+        } catch (error) {
+
+            showResult(
+                "statusResult",
+                "Cancel failed: " +
+                error.message
+            );
+
+        }
+
+    }
+
+
+    /* ================= SEAT MAP ================= */
+
+    async function loadSeatMap() {
+
+        const flightId =
+            Number(
+                document
+                    .getElementById("seatMapFlightId")
+                    .value
+            );
+
+
+        if (!flightId) {
 
             showResult(
                 "seatMapResult",
-                data.detail ||
-                JSON.stringify(data),
-                false
+                "Please enter Flight ID."
             );
 
             return;
         }
 
 
-        let text =
-
-`Flight Number:
-${data.flight_number}
-
-Flight ID:
-${data.flight_id}
-
-Total Seats:
-${data.total_seats}
-
-Seats:
-
-`;
+        showResult(
+            "seatMapResult",
+            "Loading seat map..."
+        );
 
 
-        if (data.seats) {
+        try {
 
-            data.seats.forEach(seat => {
+            const result =
+                await api(
+                    `/flights/${flightId}/seatmap`
+                );
 
-                text +=
 
-`${seat.seat_number}
-Class: ${seat.class}
-Status: ${
-    seat.is_occupied
-    ? "OCCUPIED"
-    : "AVAILABLE"
-}
+            showResult(
+                "seatMapResult",
+                result
+            );
 
-`;
 
-            });
+        } catch (error) {
+
+            showResult(
+                "seatMapResult",
+                "Seat map failed: " +
+                error.message
+            );
 
         }
 
-
-        showResult(
-            "seatMapResult",
-            text,
-            true
-        );
-
     }
-
-    catch(error) {
-
-        showResult(
-            "seatMapResult",
-            "Backend connection failed: " +
-            error.message,
-            false
-        );
-    }
-}
 
 </script>
 
