@@ -1,26 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Super Admin Dashboard</title>
+    <title>Super Admin Dashboard - FlightMgmt</title>
 
     <style>
-
-        :root {
-            --navy: #0b1f3a;
-            --navy-light: #13294f;
-            --amber: #f2a541;
-            --cream: #f7f5f0;
-            --white: #ffffff;
-            --green: #239b5b;
-            --red: #c94a3b;
-            --gray: #667085;
-            --border: #dedede;
-        }
-
         * {
             box-sizing: border-box;
         }
@@ -28,439 +14,554 @@
         body {
             margin: 0;
             font-family: Arial, Helvetica, sans-serif;
-            background: var(--cream);
-            color: var(--navy);
+            background: #f7f6f2;
+            color: #0b2343;
         }
 
-        header {
-            background: var(--navy);
-            color: white;
-            padding: 18px 35px;
+        /* =========================
+           TOP NAVIGATION
+        ========================== */
 
+        .top-nav {
+            width: 100%;
+            min-height: 90px;
+            background: #0b2343;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            padding: 15px 32px;
+            gap: 20px;
         }
 
         .logo {
-            font-size: 25px;
-            font-weight: bold;
+            font-size: 36px;
+            font-weight: 800;
+            color: white;
+            white-space: nowrap;
         }
 
         .logo span {
-            color: var(--amber);
+            color: #f5a623;
         }
 
-        .role {
-            background: rgba(255,255,255,0.12);
-            padding: 9px 15px;
-            border-radius: 20px;
+        .nav-buttons {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
+
+        .nav-btn {
+            text-decoration: none;
+            color: white;
+            background: #294563;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: #3b5c7e;
+        }
+
+        .nav-btn.active {
+            background: #f5a623;
+            color: #0b2343;
+        }
+
+        /* =========================
+           MAIN
+        ========================== */
 
         .container {
-            max-width: 1200px;
-            margin: 35px auto;
-            padding: 0 20px;
+            width: 96%;
+            max-width: 1500px;
+            margin: 45px auto;
         }
 
         h1 {
-            margin-bottom: 5px;
+            font-size: 52px;
+            margin: 0 0 15px;
         }
 
         .subtitle {
-            color: var(--gray);
+            font-size: 24px;
+            color: #5b7390;
+            margin-bottom: 30px;
         }
 
         .notice {
-            background: #fff8e7;
-            border: 1px solid #efd18e;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
+            background: #fff8e8;
+            border: 1px solid #f1c66d;
+            border-radius: 12px;
+            padding: 22px;
+            font-size: 21px;
+            margin-bottom: 38px;
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-top: 25px;
-        }
+        /* =========================
+           CARDS
+        ========================== */
 
         .card {
             background: white;
-            padding: 25px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #ddd;
+            border-radius: 18px;
+            padding: 38px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
         }
 
-        .full {
-            grid-column: 1 / -1;
-        }
-
-        h2 {
+        .card h2 {
+            font-size: 36px;
             margin-top: 0;
+            margin-bottom: 12px;
         }
+
+        .description {
+            color: #5b7390;
+            font-size: 22px;
+            margin-bottom: 30px;
+        }
+
+        /* =========================
+           FORM
+        ========================== */
 
         label {
             display: block;
-            margin-top: 14px;
-            margin-bottom: 7px;
-            font-weight: bold;
+            font-size: 21px;
+            font-weight: 700;
+            margin: 20px 0 10px;
         }
 
         input,
         select {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 7px;
-            font-size: 15px;
-        }
-
-        button {
-            border: none;
-            border-radius: 7px;
-            padding: 12px 18px;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 18px;
-        }
-
-        .primary {
-            background: var(--navy);
-            color: white;
-        }
-
-        .secondary {
-            background: #edf1f7;
-            color: var(--navy);
-        }
-
-        .danger {
-            background: var(--red);
-            color: white;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        .result {
-            margin-top: 18px;
-            padding: 15px;
-            border-radius: 8px;
-            background: #f5f6f8;
-            border: 1px solid var(--border);
-            white-space: pre-wrap;
-            line-height: 1.6;
-        }
-
-        .success {
-            background: #edf9f2;
-            border-color: #a9dfbd;
-            color: #176b3d;
-        }
-
-        .error {
-            background: #fff0ee;
-            border-color: #efaaa1;
-            color: #a32f26;
-        }
-
-        .class-box {
-            border: 1px solid var(--border);
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            background: #fafafa;
-        }
-
-        .class-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .flight {
-            border: 1px solid var(--border);
             padding: 18px;
-            margin-top: 12px;
-            border-radius: 8px;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            font-size: 20px;
             background: white;
         }
 
-        .flight-title {
-            font-size: 19px;
-            font-weight: bold;
+        input:focus,
+        select:focus {
+            outline: 2px solid #f5a623;
         }
 
-        .muted {
-            color: var(--gray);
-            margin-top: 5px;
+        .class-box {
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 25px;
+            background: #fafafa;
         }
 
-        @media(max-width: 800px) {
+        .class-box h3 {
+            font-size: 25px;
+            margin-top: 0;
+        }
 
-            .grid {
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        /* =========================
+           BUTTONS
+        ========================== */
+
+        button {
+            border: none;
+            border-radius: 10px;
+            padding: 17px 28px;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            background: #0b2343;
+            color: white;
+            margin-top: 25px;
+        }
+
+        button:hover {
+            background: #173c67;
+        }
+
+        .danger {
+            background: #d4493d;
+        }
+
+        .danger:hover {
+            background: #b93830;
+        }
+
+        .light-btn {
+            background: #eaf0f7;
+            color: #0b2343;
+        }
+
+        .light-btn:hover {
+            background: #dce6f1;
+        }
+
+        /* =========================
+           RESULTS
+        ========================== */
+
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 12px;
+            background: #f3f6fa;
+            border: 1px solid #d6dce3;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            font-size: 17px;
+        }
+
+        .success {
+            background: #edf9f0;
+            border-color: #8dcc99;
+        }
+
+        .error {
+            background: #fff0ef;
+            border-color: #e49a94;
+        }
+
+        /* =========================
+           BOTTOM NAVIGATION
+        ========================== */
+
+        .bottom-navigation {
+            margin-top: 60px;
+            padding: 45px 20px;
+            background: #0b2343;
+            text-align: center;
+        }
+
+        .bottom-navigation h2 {
+            color: white;
+            margin: 0 0 25px;
+            font-size: 30px;
+        }
+
+        .bottom-nav-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .bottom-nav-buttons a {
+            text-decoration: none;
+            color: white;
+            background: #294563;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .bottom-nav-buttons a:hover {
+            background: #f5a623;
+            color: #0b2343;
+        }
+
+        /* =========================
+           MOBILE
+        ========================== */
+
+        @media (max-width: 900px) {
+
+            .top-nav {
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .nav-buttons {
+                justify-content: center;
+            }
+
+            .grid-2 {
                 grid-template-columns: 1fr;
             }
 
-            .full {
-                grid-column: auto;
+            h1 {
+                font-size: 38px;
             }
 
-            header {
-                padding: 15px 20px;
+            .card {
+                padding: 25px;
             }
         }
-
     </style>
-
 </head>
-
 
 <body>
 
+<!-- =====================================================
+     TOP NAVIGATION
+====================================================== -->
 
-<header>
+<nav class="top-nav">
 
     <div class="logo">
         Flight<span>Mgmt</span>
     </div>
 
-    <div class="role">
-        Role: <strong>super_admin</strong>
+    <div class="nav-buttons">
+
+        <a href="index.html" class="nav-btn">
+            ✈️ Customer Booking
+        </a>
+
+        <a href="ops_agent.html" class="nav-btn">
+            ⚙️ Ops Agent
+        </a>
+
+        <a href="admin.html" class="nav-btn active">
+            👑 Super Admin
+        </a>
+
     </div>
 
-</header>
+</nav>
 
+
+<!-- =====================================================
+     MAIN CONTENT
+====================================================== -->
 
 <div class="container">
 
     <h1>Super Admin Dashboard</h1>
 
-    <p class="subtitle">
+    <div class="subtitle">
         Manage flights, schedules and flight inventory.
-    </p>
-
+    </div>
 
     <div class="notice">
-
         <strong>Super Admin:</strong>
-
         You can create and cancel flights.
-        These operations are restricted to the super_admin role.
-
+        These operations are restricted to the
+        <strong>super_admin</strong> role.
     </div>
 
 
-    <div class="grid">
+    <!-- =================================================
+         CREATE FLIGHT
+    ================================================== -->
+
+    <div class="card">
+
+        <h2>Create Flight</h2>
+
+        <div class="description">
+            Create a new flight and define its seat classes.
+        </div>
 
 
-        <!-- =====================================================
-             CREATE FLIGHT
-        ====================================================== -->
-
-        <div class="card full">
-
-            <h2>Create Flight</h2>
-
-            <p class="muted">
-                Create a new flight and define its seat classes.
-            </p>
+        <label>Flight Number</label>
+        <input
+            id="flightNumber"
+            type="text"
+            placeholder="Example: TESTBOOK01"
+        >
 
 
-            <label>Flight Number</label>
+        <div class="grid-2">
 
-            <input
-                id="flightNumber"
-                type="text"
-                placeholder="Example: TESTBOOK01"
-            >
-
-
-            <label>Origin</label>
-
-            <input
-                id="origin"
-                type="text"
-                placeholder="Example: LHR"
-            >
-
-
-            <label>Destination</label>
-
-            <input
-                id="destination"
-                type="text"
-                placeholder="Example: DXB"
-            >
-
-
-            <label>Origin Timezone</label>
-
-            <input
-                id="originTz"
-                type="text"
-                value="Europe/London"
-            >
-
-
-            <label>Destination Timezone</label>
-
-            <input
-                id="destTz"
-                type="text"
-                value="Asia/Dubai"
-            >
-
-
-            <label>Departure Date & Time</label>
-
-            <input
-                id="departure"
-                type="datetime-local"
-            >
-
-
-            <label>Arrival Date & Time</label>
-
-            <input
-                id="arrival"
-                type="datetime-local"
-            >
-
-
-            <label>Total Capacity</label>
-
-            <input
-                id="totalCapacity"
-                type="number"
-                placeholder="Example: 100"
-            >
-
-
-            <!-- =========================
-                 FIRST CLASS
-            ========================== -->
-
-            <div class="class-box">
-
-                <div class="class-title">
-                    First Class
-                </div>
-
-                <label>Number of Seats</label>
-
+            <div>
+                <label>Origin</label>
                 <input
-                    id="firstSeats"
-                    type="number"
-                    value="20"
-                    min="1"
+                    id="origin"
+                    type="text"
+                    placeholder="Example: LHR"
                 >
-
-                <label>Base Price (USD)</label>
-
-                <input
-                    id="firstPrice"
-                    type="number"
-                    value="700"
-                    min="1"
-                >
-
             </div>
 
-
-            <!-- =========================
-                 BUSINESS CLASS
-            ========================== -->
-
-            <div class="class-box">
-
-                <div class="class-title">
-                    Business Class
-                </div>
-
-                <label>Number of Seats</label>
-
+            <div>
+                <label>Destination</label>
                 <input
-                    id="businessSeats"
-                    type="number"
-                    value="30"
-                    min="1"
+                    id="destination"
+                    type="text"
+                    placeholder="Example: DXB"
                 >
-
-                <label>Base Price (USD)</label>
-
-                <input
-                    id="businessPrice"
-                    type="number"
-                    value="500"
-                    min="1"
-                >
-
             </div>
-
-
-            <!-- =========================
-                 ECONOMY CLASS
-            ========================== -->
-
-            <div class="class-box">
-
-                <div class="class-title">
-                    Economy Class
-                </div>
-
-                <label>Number of Seats</label>
-
-                <input
-                    id="economySeats"
-                    type="number"
-                    value="50"
-                    min="1"
-                >
-
-                <label>Base Price (USD)</label>
-
-                <input
-                    id="economyPrice"
-                    type="number"
-                    value="350"
-                    min="1"
-                >
-
-            </div>
-
-
-            <button
-                class="primary"
-                onclick="createFlight()"
-            >
-                Create Flight
-            </button>
-
-
-            <div id="createResult"></div>
 
         </div>
 
 
+        <div class="grid-2">
 
-        <!-- =====================================================
-             CANCEL FLIGHT
-        ====================================================== -->
+            <div>
+                <label>Origin Timezone</label>
+                <input
+                    id="originTimezone"
+                    type="text"
+                    value="Europe/London"
+                    placeholder="Example: Europe/London"
+                >
+            </div>
+
+            <div>
+                <label>Destination Timezone</label>
+                <input
+                    id="destinationTimezone"
+                    type="text"
+                    value="Asia/Dubai"
+                    placeholder="Example: Asia/Dubai"
+                >
+            </div>
+
+        </div>
+
+
+        <div class="grid-2">
+
+            <div>
+                <label>Departure Date & Time</label>
+                <input
+                    id="departure"
+                    type="datetime-local"
+                >
+            </div>
+
+            <div>
+                <label>Arrival Date & Time</label>
+                <input
+                    id="arrival"
+                    type="datetime-local"
+                >
+            </div>
+
+        </div>
+
+
+        <label>Total Capacity</label>
+        <input
+            id="totalCapacity"
+            type="number"
+            placeholder="Example: 100"
+        >
+
+
+        <!-- =========================
+             ECONOMY
+        ========================== -->
+
+        <div class="class-box">
+
+            <h3>Economy Class</h3>
+
+            <label>Number of Seats</label>
+
+            <input
+                id="economySeats"
+                type="number"
+                value="50"
+            >
+
+            <label>Base Price (USD)</label>
+
+            <input
+                id="economyPrice"
+                type="number"
+                value="350"
+            >
+
+        </div>
+
+
+        <!-- =========================
+             FIRST
+        ========================== -->
+
+        <div class="class-box">
+
+            <h3>First Class</h3>
+
+            <label>Number of Seats</label>
+
+            <input
+                id="firstSeats"
+                type="number"
+                value="20"
+            >
+
+            <label>Base Price (USD)</label>
+
+            <input
+                id="firstPrice"
+                type="number"
+                value="700"
+            >
+
+        </div>
+
+
+        <!-- =========================
+             BUSINESS
+        ========================== -->
+
+        <div class="class-box">
+
+            <h3>Business Class</h3>
+
+            <label>Number of Seats</label>
+
+            <input
+                id="businessSeats"
+                type="number"
+                value="30"
+            >
+
+            <label>Base Price (USD)</label>
+
+            <input
+                id="businessPrice"
+                type="number"
+                value="500"
+            >
+
+        </div>
+
+
+        <button onclick="createFlight()">
+            Create Flight
+        </button>
+
+
+        <div id="createResult" class="result">
+            Create Flight result will appear here.
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         CANCEL FLIGHT + SEAT MAP
+    ================================================== -->
+
+    <div class="grid-2">
+
+        <!-- CANCEL FLIGHT -->
 
         <div class="card">
 
             <h2>Cancel Flight</h2>
 
-            <p class="muted">
+            <div class="description">
                 Cancel a complete flight.
                 Confirmed bookings may trigger refunds.
-            </p>
-
+            </div>
 
             <label>Flight ID</label>
 
@@ -470,7 +571,6 @@
                 placeholder="Example: 15"
             >
 
-
             <button
                 class="danger"
                 onclick="cancelFlight()"
@@ -478,25 +578,22 @@
                 Cancel Flight
             </button>
 
-
-            <div id="cancelResult"></div>
+            <div id="cancelResult" class="result">
+                Cancel Flight result will appear here.
+            </div>
 
         </div>
 
 
-
-        <!-- =====================================================
-             SEAT MAP
-        ====================================================== -->
+        <!-- SEAT MAP -->
 
         <div class="card">
 
             <h2>Seat Map</h2>
 
-            <p class="muted">
+            <div class="description">
                 View the physical seats of a flight.
-            </p>
-
+            </div>
 
             <label>Flight ID</label>
 
@@ -506,719 +603,439 @@
                 placeholder="Example: 15"
             >
 
-
             <button
-                class="secondary"
+                class="light-btn"
                 onclick="loadSeatMap()"
             >
                 Load Seat Map
             </button>
 
-
-            <div id="seatMapResult"></div>
+            <div id="seatMapResult" class="result">
+                Seat map will appear here.
+            </div>
 
         </div>
-
-
 
     </div>
 
 </div>
 
 
+<!-- =====================================================
+     BOTTOM NAVIGATION
+====================================================== -->
+
+<div class="bottom-navigation">
+
+    <h2>Switch Dashboard</h2>
+
+    <div class="bottom-nav-buttons">
+
+        <a href="index.html">
+            ✈️ Customer Booking
+        </a>
+
+        <a href="ops_agent.html">
+            ⚙️ Ops Agent
+        </a>
+
+        <a href="admin.html">
+            👑 Super Admin
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     JAVASCRIPT
+====================================================== -->
 
 <script>
 
-
-/* ============================================================
-   BACKEND
-============================================================ */
-
-const API_BASE =
-    "https://flight-management-capstone.onrender.com";
+    const API_BASE =
+        "https://flight-management-capstone.onrender.com";
 
 
-/* ============================================================
-   ROLE
-============================================================ */
+    /* =================================================
+       HELPER
+    ================================================== */
 
-const ADMIN_ROLE = "super_admin";
+    function showResult(elementId, message, success = false) {
 
-
-/* ============================================================
-   IDMPOTENCY KEY
-============================================================ */
-
-function makeKey(prefix) {
-
-    return prefix +
-        "-" +
-        Date.now() +
-        "-" +
-        Math.random()
-        .toString(36)
-        .substring(2, 8);
-
-}
-
-
-/* ============================================================
-   SHOW RESULT
-============================================================ */
-
-function showResult(
-    elementId,
-    message,
-    success = true
-) {
-
-    const element =
-        document.getElementById(elementId);
-
-    element.className =
-        success
-        ? "result success"
-        : "result error";
-
-    if (typeof message === "object") {
+        const element = document.getElementById(elementId);
 
         element.textContent =
-            JSON.stringify(
-                message,
-                null,
-                2
+            typeof message === "string"
+                ? message
+                : JSON.stringify(message, null, 2);
+
+        element.className =
+            success
+                ? "result success"
+                : "result error";
+    }
+
+
+    async function getResponseData(response) {
+
+        const text = await response.text();
+
+        try {
+            return JSON.parse(text);
+        } catch {
+            return text;
+        }
+    }
+
+
+    /* =================================================
+       CREATE FLIGHT
+    ================================================== */
+
+    async function createFlight() {
+
+        const flightNumber =
+            document.getElementById("flightNumber").value.trim();
+
+        const origin =
+            document.getElementById("origin").value.trim().toUpperCase();
+
+        const destination =
+            document.getElementById("destination").value.trim().toUpperCase();
+
+        const originTimezone =
+            document.getElementById("originTimezone").value.trim();
+
+        const destinationTimezone =
+            document.getElementById("destinationTimezone").value.trim();
+
+        const departure =
+            document.getElementById("departure").value;
+
+        const arrival =
+            document.getElementById("arrival").value;
+
+        const totalCapacity =
+            Number(document.getElementById("totalCapacity").value);
+
+        const economySeats =
+            Number(document.getElementById("economySeats").value);
+
+        const economyPrice =
+            Number(document.getElementById("economyPrice").value);
+
+        const firstSeats =
+            Number(document.getElementById("firstSeats").value);
+
+        const firstPrice =
+            Number(document.getElementById("firstPrice").value);
+
+        const businessSeats =
+            Number(document.getElementById("businessSeats").value);
+
+        const businessPrice =
+            Number(document.getElementById("businessPrice").value);
+
+
+        if (!flightNumber || !origin || !destination) {
+
+            showResult(
+                "createResult",
+                "Please enter Flight Number, Origin and Destination."
             );
 
-    } else {
-
-        element.textContent =
-            message;
-
-    }
-
-}
+            return;
+        }
 
 
-/* ============================================================
-   CONVERT DATETIME-LOCAL TO ISO
-============================================================ */
+        if (!departure || !arrival) {
 
-function toISO(value) {
+            showResult(
+                "createResult",
+                "Please select departure and arrival date/time."
+            );
 
-    if (!value) {
-        return "";
-    }
-
-    return new Date(value)
-        .toISOString();
-
-}
+            return;
+        }
 
 
-/* ============================================================
-   CREATE FLIGHT
-============================================================ */
+        if (!totalCapacity || totalCapacity <= 0) {
 
-async function createFlight() {
+            showResult(
+                "createResult",
+                "Please enter a valid total capacity."
+            );
 
-    const flightNumber =
-        document
-        .getElementById("flightNumber")
-        .value
-        .trim()
-        .toUpperCase();
+            return;
+        }
 
 
-    const origin =
-        document
-        .getElementById("origin")
-        .value
-        .trim()
-        .toUpperCase();
+        const payload = {
 
+            flight_number: flightNumber,
 
-    const destination =
-        document
-        .getElementById("destination")
-        .value
-        .trim()
-        .toUpperCase();
+            origin: origin,
 
+            destination: destination,
 
-    const originTz =
-        document
-        .getElementById("originTz")
-        .value
-        .trim();
+            origin_timezone: originTimezone,
 
+            destination_timezone: destinationTimezone,
 
-    const destTz =
-        document
-        .getElementById("destTz")
-        .value
-        .trim();
+            departure_ts: new Date(departure).toISOString(),
 
+            arrival_ts: new Date(arrival).toISOString(),
 
-    const departure =
-        document
-        .getElementById("departure")
-        .value;
+            total_capacity: totalCapacity,
 
+            classes: [
 
-    const arrival =
-        document
-        .getElementById("arrival")
-        .value;
+                {
+                    class_name: "Economy",
+                    seats: economySeats,
+                    base_price: economyPrice
+                },
 
+                {
+                    class_name: "First",
+                    seats: firstSeats,
+                    base_price: firstPrice
+                },
 
-    const totalCapacity =
-        Number(
-            document
-            .getElementById("totalCapacity")
-            .value
-        );
+                {
+                    class_name: "Business",
+                    seats: businessSeats,
+                    base_price: businessPrice
+                }
 
+            ]
 
-    const firstSeats =
-        Number(
-            document
-            .getElementById("firstSeats")
-            .value
-        );
+        };
 
-
-    const firstPrice =
-        Number(
-            document
-            .getElementById("firstPrice")
-            .value
-        );
-
-
-    const businessSeats =
-        Number(
-            document
-            .getElementById("businessSeats")
-            .value
-        );
-
-
-    const businessPrice =
-        Number(
-            document
-            .getElementById("businessPrice")
-            .value
-        );
-
-
-    const economySeats =
-        Number(
-            document
-            .getElementById("economySeats")
-            .value
-        );
-
-
-    const economyPrice =
-        Number(
-            document
-            .getElementById("economyPrice")
-            .value
-        );
-
-
-    /* =========================
-       BASIC VALIDATION
-    ========================== */
-
-    if (
-        !flightNumber ||
-        !origin ||
-        !destination ||
-        !departure ||
-        !arrival ||
-        !totalCapacity
-    ) {
 
         showResult(
             "createResult",
-            "Please fill all required flight fields.",
-            false
+            "Creating flight..."
         );
 
-        return;
-    }
 
+        try {
 
-    const seatTotal =
-        firstSeats +
-        businessSeats +
-        economySeats;
-
-
-    if (seatTotal !== totalCapacity) {
-
-        showResult(
-
-            "createResult",
-
-            `Seat class total is ${seatTotal}, but total capacity is ${totalCapacity}.
-
-First: ${firstSeats}
-Business: ${businessSeats}
-Economy: ${economySeats}`,
-
-            false
-
-        );
-
-        return;
-    }
-
-
-    if (
-        firstSeats <= 0 ||
-        businessSeats <= 0 ||
-        economySeats <= 0
-    ) {
-
-        showResult(
-            "createResult",
-            "Each seat class must have at least 1 seat.",
-            false
-        );
-
-        return;
-    }
-
-
-    if (
-        firstPrice <= 0 ||
-        businessPrice <= 0 ||
-        economyPrice <= 0
-    ) {
-
-        showResult(
-            "createResult",
-            "All seat class prices must be greater than 0.",
-            false
-        );
-
-        return;
-    }
-
-
-    /* =========================
-       REQUEST BODY
-    ========================== */
-
-    const body = {
-
-        flight_number:
-            flightNumber,
-
-        origin:
-            origin,
-
-        destination:
-            destination,
-
-        origin_tz:
-            originTz || "Europe/London",
-
-        dest_tz:
-            destTz || "Asia/Dubai",
-
-        departure_ts:
-            toISO(departure),
-
-        arrival_ts:
-            toISO(arrival),
-
-        total_capacity:
-            totalCapacity,
-
-        seat_classes: [
-
-            {
-                class_name: "first",
-                total_seats: firstSeats,
-                base_price: firstPrice
-            },
-
-            {
-                class_name: "business",
-                total_seats: businessSeats,
-                base_price: businessPrice
-            },
-
-            {
-                class_name: "economy",
-                total_seats: economySeats,
-                base_price: economyPrice
-            }
-
-        ]
-
-    };
-
-
-    try {
-
-        const response =
-            await fetch(
+            const response = await fetch(
                 `${API_BASE}/admin/flights`,
                 {
-
                     method: "POST",
 
                     headers: {
-
-                        "Content-Type":
-                            "application/json",
-
-                        "X-Admin-Role":
-                            ADMIN_ROLE,
-
-                        "Idempotency-Key":
-                            makeKey("create-flight")
-
+                        "Content-Type": "application/json"
                     },
 
-                    body:
-                        JSON.stringify(body)
-
+                    body: JSON.stringify(payload)
                 }
             );
 
 
-        const data =
-            await response.json();
+            const data =
+                await getResponseData(response);
 
 
-        if (!response.ok) {
+            if (!response.ok) {
+
+                showResult(
+                    "createResult",
+                    `Error ${response.status}:\n\n` +
+                    JSON.stringify(data, null, 2)
+                );
+
+                return;
+            }
+
 
             showResult(
-
                 "createResult",
+                "Flight created successfully!\n\n" +
+                JSON.stringify(data, null, 2),
+                true
+            );
 
-                data.detail ||
-                data,
+        }
 
-                false
+        catch (error) {
 
+            showResult(
+                "createResult",
+                "Backend connection failed:\n\n" +
+                error.message
+            );
+
+        }
+
+    }
+
+
+    /* =================================================
+       CANCEL FLIGHT
+    ================================================== */
+
+    async function cancelFlight() {
+
+        const flightId =
+            document.getElementById("cancelFlightId").value.trim();
+
+
+        if (!flightId) {
+
+            showResult(
+                "cancelResult",
+                "Please enter the Flight ID."
             );
 
             return;
         }
 
 
-        showResult(
-
-            "createResult",
-
-            `Flight created successfully!
-
-Flight ID:
-${data.flight_id}
-
-Message:
-${data.message}`,
-
-            true
-
-        );
+        const confirmed =
+            confirm(
+                `Are you sure you want to cancel Flight ID ${flightId}?`
+            );
 
 
-        /* Automatically put ID into other field */
-
-        if (data.flight_id) {
-
-            document
-            .getElementById("cancelFlightId")
-            .value =
-                data.flight_id;
-
-
-            document
-            .getElementById("seatMapFlightId")
-            .value =
-                data.flight_id;
-
+        if (!confirmed) {
+            return;
         }
 
-    }
-
-    catch(error) {
-
-        showResult(
-
-            "createResult",
-
-            "Backend connection failed: " +
-            error.message,
-
-            false
-
-        );
-
-    }
-
-}
-
-
-/* ============================================================
-   CANCEL FLIGHT
-============================================================ */
-
-async function cancelFlight() {
-
-    const flightId =
-        Number(
-            document
-            .getElementById("cancelFlightId")
-            .value
-        );
-
-
-    if (!flightId) {
 
         showResult(
             "cancelResult",
-            "Please enter Flight ID.",
-            false
-        );
-
-        return;
-    }
-
-
-    const confirmed =
-        confirm(
-            `Are you sure you want to cancel Flight #${flightId}?`
+            "Cancelling flight..."
         );
 
 
-    if (!confirmed) {
-        return;
-    }
+        try {
 
-
-    try {
-
-        const response =
-            await fetch(
-
+            const response = await fetch(
                 `${API_BASE}/admin/flights/${flightId}/cancel`,
-
                 {
-
                     method: "POST",
 
                     headers: {
-
-                        "X-Admin-Role":
-                            ADMIN_ROLE,
-
-                        "Idempotency-Key":
-                            makeKey("cancel-flight")
-
+                        "Content-Type": "application/json"
                     }
-
                 }
-
             );
 
 
-        const data =
-            await response.json();
+            const data =
+                await getResponseData(response);
 
 
-        if (!response.ok) {
+            if (!response.ok) {
+
+                showResult(
+                    "cancelResult",
+                    `Error ${response.status}:\n\n` +
+                    JSON.stringify(data, null, 2)
+                );
+
+                return;
+            }
+
 
             showResult(
-
                 "cancelResult",
+                "Flight cancelled successfully!\n\n" +
+                JSON.stringify(data, null, 2),
+                true
+            );
 
-                data.detail ||
-                data,
+        }
 
-                false
+        catch (error) {
 
+            showResult(
+                "cancelResult",
+                "Backend connection failed:\n\n" +
+                error.message
+            );
+
+        }
+
+    }
+
+
+    /* =================================================
+       SEAT MAP
+    ================================================== */
+
+    async function loadSeatMap() {
+
+        const flightId =
+            document.getElementById("seatMapFlightId").value.trim();
+
+
+        if (!flightId) {
+
+            showResult(
+                "seatMapResult",
+                "Please enter the Flight ID."
             );
 
             return;
         }
 
-
-        showResult(
-
-            "cancelResult",
-
-            `Flight cancelled successfully!
-
-Flight ID:
-${data.flight_id}
-
-Flight Number:
-${data.flight_number}
-
-Status:
-${data.status}
-
-Refunds Created:
-${data.refunds_created}`,
-
-            true
-
-        );
-
-    }
-
-    catch(error) {
-
-        showResult(
-
-            "cancelResult",
-
-            "Backend connection failed: " +
-            error.message,
-
-            false
-
-        );
-
-    }
-
-}
-
-
-/* ============================================================
-   SEAT MAP
-============================================================ */
-
-async function loadSeatMap() {
-
-    const flightId =
-        Number(
-            document
-            .getElementById("seatMapFlightId")
-            .value
-        );
-
-
-    if (!flightId) {
 
         showResult(
             "seatMapResult",
-            "Please enter Flight ID.",
-            false
+            "Loading seat map..."
         );
 
-        return;
-    }
 
+        try {
 
-    try {
-
-        const response =
-            await fetch(
+            const response = await fetch(
                 `${API_BASE}/flights/${flightId}/seatmap`
             );
 
 
-        const data =
-            await response.json();
+            const data =
+                await getResponseData(response);
 
 
-        if (!response.ok) {
+            if (!response.ok) {
+
+                showResult(
+                    "seatMapResult",
+                    `Error ${response.status}:\n\n` +
+                    JSON.stringify(data, null, 2)
+                );
+
+                return;
+            }
+
 
             showResult(
-
                 "seatMapResult",
-
-                data.detail ||
-                data,
-
-                false
-
-            );
-
-            return;
-        }
-
-
-        let text =
-
-`Flight Number:
-${data.flight_number}
-
-Flight ID:
-${data.flight_id}
-
-Total Seats:
-${data.total_seats}
-
-Seats:
-
-`;
-
-
-        if (data.seats) {
-
-            data.seats.forEach(
-                seat => {
-
-                    text +=
-
-`${seat.seat_number}
-Class: ${seat.class}
-Status: ${
-    seat.is_occupied
-    ? "OCCUPIED"
-    : "AVAILABLE"
-}
-
-`;
-
-                }
+                JSON.stringify(data, null, 2),
+                true
             );
 
         }
 
+        catch (error) {
 
-        showResult(
+            showResult(
+                "seatMapResult",
+                "Backend connection failed:\n\n" +
+                error.message
+            );
 
-            "seatMapResult",
-
-            text,
-
-            true
-
-        );
-
-    }
-
-    catch(error) {
-
-        showResult(
-
-            "seatMapResult",
-
-            "Backend connection failed: " +
-            error.message,
-
-            false
-
-        );
+        }
 
     }
-
-}
-
 
 </script>
 
 </body>
-
 </html>
