@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Ops Agent Dashboard - FlightMgmt</title>
+    <title>Ops Agent - Flight Management</title>
 
     <style>
         * {
@@ -14,1184 +14,1660 @@
         body {
             margin: 0;
             font-family: Arial, Helvetica, sans-serif;
-            background: #f7f6f2;
-            color: #0b2343;
+            background: #f3f7fb;
+            color: #17324d;
         }
 
-        /* =========================
-           TOP NAVIGATION
-        ========================== */
+        header {
+            background: #145a86;
+            color: white;
+            padding: 18px 6%;
 
-        .top-nav {
-            width: 100%;
-            min-height: 90px;
-            background: #0b2343;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding: 15px 32px;
-            gap: 20px;
-        }
-
-        .logo {
-            font-size: 36px;
-            font-weight: 800;
-            color: white;
-            white-space: nowrap;
-        }
-
-        .logo span {
-            color: #f5a623;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 14px;
             align-items: center;
+
+            gap: 20px;
             flex-wrap: wrap;
-            justify-content: flex-end;
         }
 
-        .nav-btn {
-            text-decoration: none;
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        nav {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        nav a {
             color: white;
-            background: #294563;
-            padding: 15px 25px;
-            border-radius: 30px;
-            font-size: 18px;
-            font-weight: 700;
-            transition: 0.2s;
+            text-decoration: none;
+
+            border: 1px solid rgba(255,255,255,.35);
+
+            padding: 9px 14px;
+            border-radius: 8px;
+
+            font-size: 14px;
+            font-weight: 600;
         }
 
-        .nav-btn:hover {
-            background: #3b5c7e;
+        nav a:hover,
+        nav a.active {
+            background: white;
+            color: #145a86;
         }
-
-        .nav-btn.active {
-            background: #f5a623;
-            color: #0b2343;
-        }
-
-        /* =========================
-           MAIN
-        ========================== */
 
         .container {
-            width: 96%;
-            max-width: 1500px;
-            margin: 45px auto;
+            width: min(1200px, 92%);
+            margin: 30px auto 60px;
         }
 
-        h1 {
-            font-size: 52px;
-            margin: 0 0 15px;
+        .hero h2 {
+            margin: 0 0 8px;
+            font-size: 30px;
         }
 
-        .subtitle {
-            font-size: 24px;
-            color: #5b7390;
-            margin-bottom: 30px;
+        .hero p {
+            color: #687d91;
+            margin-bottom: 25px;
         }
 
         .notice {
-            background: #fff8e8;
-            border: 1px solid #f1c66d;
+            background: #eef7fc;
+            border: 1px solid #c8deed;
+
+            padding: 15px 18px;
             border-radius: 12px;
-            padding: 22px;
-            font-size: 21px;
-            margin-bottom: 38px;
+
+            margin-bottom: 22px;
+
+            color: #17577e;
+            line-height: 1.5;
         }
 
-        /* =========================
-           CARDS
-        ========================== */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .full {
+            grid-column: 1 / -1;
+        }
 
         .card {
             background: white;
-            border: 1px solid #ddd;
-            border-radius: 18px;
-            padding: 38px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+
+            border: 1px solid #d6e2ee;
+            border-radius: 16px;
+
+            padding: 22px;
+
+            box-shadow:
+                0 8px 25px rgba(20,60,100,.06);
         }
 
-        .card h2 {
-            font-size: 36px;
-            margin-top: 0;
-            margin-bottom: 12px;
+        .card h3 {
+            margin: 0 0 18px;
+            color: #164d7d;
         }
-
-        .description {
-            color: #5b7390;
-            font-size: 22px;
-            margin-bottom: 30px;
-        }
-
-        /* =========================
-           FORM
-        ========================== */
 
         label {
             display: block;
-            font-size: 21px;
+
+            margin: 13px 0 6px;
+
             font-weight: 700;
-            margin: 20px 0 10px;
         }
 
         input,
         select {
             width: 100%;
-            padding: 18px;
-            border: 1px solid #ccc;
-            border-radius: 12px;
-            font-size: 20px;
-            background: white;
+
+            padding: 11px 12px;
+
+            border: 1px solid #c6d7e7;
+
+            border-radius: 8px;
+
+            font-size: 14px;
+
+            outline: none;
         }
 
         input:focus,
         select:focus {
-            outline: 2px solid #f5a623;
+            border-color: #2777b8;
+
+            box-shadow:
+                0 0 0 3px rgba(39,119,184,.1);
         }
-
-        /* =========================
-           GRID
-        ========================== */
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-        }
-
-        /* =========================
-           BUTTONS
-        ========================== */
 
         button {
-            border: none;
-            border-radius: 10px;
-            padding: 17px 28px;
-            font-size: 20px;
+            border: 0;
+
+            border-radius: 8px;
+
+            padding: 12px 16px;
+
+            font-size: 14px;
+
             font-weight: 700;
+
             cursor: pointer;
-            background: #0b2343;
+        }
+
+        button:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .primary {
+            background: #146da8;
             color: white;
-            margin-top: 25px;
         }
 
-        button:hover {
-            background: #173c67;
+        .primary:hover {
+            background: #0d5787;
         }
 
-        .danger {
-            background: #d4493d;
+        .secondary {
+            background: #eaf2f9;
+            color: #124c79;
         }
 
-        .danger:hover {
-            background: #b93830;
-        }
-
-        .light-btn {
-            background: #eaf0f7;
-            color: #0b2343;
-        }
-
-        .light-btn:hover {
-            background: #dce6f1;
-        }
-
-        /* =========================
-           RESULTS
-        ========================== */
-
-        .result {
-            margin-top: 25px;
-            padding: 20px;
-            border-radius: 12px;
-            background: #f3f6fa;
-            border: 1px solid #d6dce3;
-            white-space: pre-wrap;
-            overflow-x: auto;
-            font-size: 17px;
-            min-height: 55px;
-        }
-
-        .success {
-            background: #edf9f0;
-            border-color: #8dcc99;
-        }
-
-        .error {
-            background: #fff0ef;
-            border-color: #e49a94;
-        }
-
-        /* =========================
-           SEARCH RESULTS
-        ========================== */
-
-        .flight-card {
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 15px;
-            background: #fafafa;
-        }
-
-        .flight-card h3 {
-            margin-top: 0;
-            font-size: 24px;
-        }
-
-        .flight-card p {
-            font-size: 17px;
-            margin: 8px 0;
-        }
-
-        /* =========================
-           BOTTOM NAVIGATION
-        ========================== */
-
-        .bottom-navigation {
-            margin-top: 60px;
-            padding: 45px 20px;
-            background: #0b2343;
-            text-align: center;
-        }
-
-        .bottom-navigation h2 {
-            color: white;
-            margin: 0 0 25px;
-            font-size: 30px;
-        }
-
-        .bottom-nav-buttons {
+        .button-row {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
+            gap: 10px;
+            margin-top: 18px;
             flex-wrap: wrap;
         }
 
-        .bottom-nav-buttons a {
-            text-decoration: none;
-            color: white;
-            background: #294563;
-            padding: 15px 25px;
-            border-radius: 30px;
-            font-size: 18px;
+        .message {
+            display: none;
+
+            margin-top: 14px;
+
+            padding: 12px;
+
+            border-radius: 8px;
+
+            font-size: 14px;
+
+            line-height: 1.5;
+        }
+
+        .message.success {
+            display: block;
+
+            background: #effaf2;
+
+            border: 1px solid #b9e1c5;
+
+            color: #176b38;
+        }
+
+        .message.error {
+            display: block;
+
+            background: #fff0f0;
+
+            border: 1px solid #efbcbc;
+
+            color: #a32929;
+        }
+
+        .flight-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .flight-card {
+            border: 1px solid #d3e1ed;
+
+            border-radius: 12px;
+
+            padding: 16px;
+
+            background: #fbfdff;
+        }
+
+        .flight-top {
+            display: flex;
+
+            justify-content: space-between;
+
+            gap: 15px;
+
+            align-items: flex-start;
+        }
+
+        .flight-number {
+            font-size: 19px;
+
+            font-weight: 800;
+
+            color: #104d7d;
+        }
+
+        .route {
+            margin-top: 5px;
+
+            font-size: 15px;
+
             font-weight: 700;
         }
 
-        .bottom-nav-buttons a:hover {
-            background: #f5a623;
-            color: #0b2343;
+        .meta {
+            margin-top: 7px;
+
+            color: #687d91;
+
+            font-size: 13px;
+
+            line-height: 1.6;
         }
 
-        /* =========================
-           MOBILE
-        ========================== */
+        .status {
+            display: inline-block;
+
+            padding: 5px 9px;
+
+            border-radius: 20px;
+
+            background: #eaf3fa;
+
+            color: #0b5d91;
+
+            font-size: 12px;
+
+            font-weight: 700;
+        }
+
+        .class-list {
+            margin-top: 13px;
+
+            display: flex;
+
+            gap: 7px;
+
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            background: #eef5fa;
+
+            border: 1px solid #cfdeea;
+
+            padding: 6px 10px;
+
+            border-radius: 20px;
+
+            font-size: 12px;
+        }
+
+        .actions {
+            margin-top: 14px;
+
+            display: flex;
+
+            gap: 8px;
+
+            flex-wrap: wrap;
+        }
+
+        .actions button {
+            padding: 9px 12px;
+        }
+
+        .small {
+            color: #71869a;
+
+            font-size: 12px;
+
+            line-height: 1.5;
+        }
+
+        .empty {
+            text-align: center;
+
+            padding: 40px 20px;
+
+            border: 1px dashed #cbd9e5;
+
+            border-radius: 12px;
+
+            color: #71869a;
+        }
 
         @media (max-width: 900px) {
-
-            .top-nav {
-                flex-direction: column;
-                padding: 20px;
-            }
-
-            .nav-buttons {
-                justify-content: center;
-            }
-
-            .grid-2 {
+            .grid {
                 grid-template-columns: 1fr;
             }
 
-            h1 {
-                font-size: 38px;
-            }
-
-            .card {
-                padding: 25px;
+            .full {
+                grid-column: auto;
             }
         }
     </style>
 </head>
 
+
 <body>
 
-<!-- =====================================================
-     TOP NAVIGATION
-====================================================== -->
 
-<nav class="top-nav">
+<header>
 
-    <div class="logo">
-        Flight<span>Mgmt</span>
-    </div>
+    <h1>
+        🛠 Ops Agent
+    </h1>
 
-    <div class="nav-buttons">
+    <nav>
 
-        <a href="index.html" class="nav-btn">
-            ✈️ Customer Booking
+        <a href="booking.html">
+            ✈ Booking
         </a>
 
-        <a href="ops_agent.html" class="nav-btn active">
-            ⚙️ Ops Agent
+        <a href="admin.html">
+            🛡 Super Admin
         </a>
 
-        <a href="admin.html" class="nav-btn">
-            👑 Super Admin
+        <a
+            href="ops_agent.html"
+            class="active"
+        >
+            🛠 Ops Agent
         </a>
 
-    </div>
+    </nav>
 
-</nav>
+</header>
 
 
-<!-- =====================================================
-     MAIN CONTENT
-====================================================== -->
+<main class="container">
 
-<div class="container">
 
-    <h1>Operations Agent Dashboard</h1>
+    <section class="hero">
 
-    <div class="subtitle">
-        Manage flight operations, seats and passenger bookings.
-    </div>
+        <h2>
+            Operations Control
+        </h2>
+
+        <p>
+            Manage flight schedules and seat-class capacity.
+        </p>
+
+    </section>
+
 
     <div class="notice">
-        <strong>Ops Agent:</strong>
-        You can search flights, hold seats, confirm bookings,
-        cancel bookings and view seat maps.
-        Flight creation is handled by <strong>super_admin</strong>.
-    </div>
 
+        <strong>Ops Agent Permissions:</strong>
 
-    <!-- =================================================
-         SEARCH FLIGHTS
-    ================================================== -->
-
-    <div class="card">
-
-        <h2>Search Flights</h2>
-
-        <div class="description">
-            Search available flights by origin, destination and date.
-        </div>
-
-        <div class="grid-2">
-
-            <div>
-                <label>Origin</label>
-
-                <input
-                    id="searchOrigin"
-                    type="text"
-                    placeholder="Example: LHR"
-                >
-            </div>
-
-            <div>
-                <label>Destination</label>
-
-                <input
-                    id="searchDestination"
-                    type="text"
-                    placeholder="Example: DXB"
-                >
-            </div>
-
-        </div>
-
-
-        <label>Date</label>
-
-        <input
-            id="searchDate"
-            type="date"
-        >
-
-
-        <button onclick="searchFlights()">
-            Search Flights
-        </button>
-
-
-        <div id="searchResult" class="result">
-            Search results will appear here.
-        </div>
+        You can update flight schedules and adjust seat-class
+        capacity. Flight creation and flight cancellation are
+        restricted to Super Admin.
 
     </div>
 
 
-    <!-- =================================================
-         HOLD + CONFIRM
-    ================================================== -->
-
-    <div class="grid-2">
-
-        <!-- HOLD SEAT -->
-
-        <div class="card">
-
-            <h2>Hold a Seat</h2>
-
-            <div class="description">
-                Hold a seat for a passenger.
-                The Booking ID will be returned automatically.
-            </div>
+    <div class="grid">
 
 
-            <label>Flight ID</label>
+        <!-- =====================================================
+             SCHEDULE UPDATE
+        ====================================================== -->
+
+        <section class="card">
+
+            <h3>
+                🕐 Update Flight Schedule
+            </h3>
+
+            <label>
+                Flight ID
+            </label>
 
             <input
-                id="holdFlightId"
+                id="scheduleFlightId"
                 type="number"
+                min="1"
                 placeholder="Example: 15"
             >
 
 
-            <label>Passenger ID</label>
+            <label>
+                New Departure
+            </label>
 
             <input
-                id="passengerId"
-                type="number"
-                placeholder="Example: 1"
+                id="newDeparture"
+                type="datetime-local"
             >
 
 
-            <label>Seat Class</label>
+            <label>
+                New Arrival
+            </label>
+
+            <input
+                id="newArrival"
+                type="datetime-local"
+            >
+
+
+            <div class="button-row">
+
+                <button
+                    id="scheduleBtn"
+                    class="primary"
+                >
+                    Update Schedule
+                </button>
+
+                <button
+                    id="clearScheduleBtn"
+                    class="secondary"
+                >
+                    Clear
+                </button>
+
+            </div>
+
+
+            <div
+                id="scheduleMessage"
+                class="message"
+            ></div>
+
+        </section>
+
+
+        <!-- =====================================================
+             SEAT CLASS UPDATE
+        ====================================================== -->
+
+        <section class="card">
+
+            <h3>
+                💺 Adjust Seat Class
+            </h3>
+
+            <label>
+                Flight ID
+            </label>
+
+            <input
+                id="seatFlightId"
+                type="number"
+                min="1"
+                placeholder="Example: 15"
+            >
+
+
+            <label>
+                Seat Class
+            </label>
 
             <select id="seatClass">
 
-                <option value="Economy">
+                <option value="economy">
                     Economy
                 </option>
 
-                <option value="Business">
+                <option value="business">
                     Business
                 </option>
 
-                <option value="First">
+                <option value="first">
                     First
                 </option>
 
             </select>
 
 
-            <label>Fare</label>
-
-            <select id="fare">
-
-                <option value="Flexible">
-                    Flexible
-                </option>
-
-                <option value="Standard">
-                    Standard
-                </option>
-
-                <option value="Basic">
-                    Basic
-                </option>
-
-            </select>
-
-
-            <label>Requested Seat (Optional)</label>
+            <label>
+                New Total Seats
+            </label>
 
             <input
-                id="requestedSeat"
-                type="text"
-                placeholder="Example: E12"
-            >
-
-
-            <button onclick="holdSeat()">
-                Hold Seat
-            </button>
-
-
-            <div id="holdResult" class="result">
-                Hold result will appear here.
-            </div>
-
-        </div>
-
-
-        <!-- CONFIRM BOOKING -->
-
-        <div class="card">
-
-            <h2>Confirm Booking</h2>
-
-            <div class="description">
-                Enter the Booking ID returned after holding a seat.
-            </div>
-
-
-            <label>Booking ID</label>
-
-            <input
-                id="confirmBookingId"
+                id="newTotalSeats"
                 type="number"
-                placeholder="Example: 48"
+                min="1"
+                placeholder="Example: 60"
             >
 
 
-            <button onclick="confirmBooking()">
-                Confirm Booking
-            </button>
+            <p class="small">
+
+                The backend will reject a new capacity if it is
+                below the number of seats already booked.
+
+            </p>
 
 
-            <div id="confirmResult" class="result">
-                Confirmation result will appear here.
+            <div class="button-row">
+
+                <button
+                    id="seatBtn"
+                    class="primary"
+                >
+                    Adjust Seats
+                </button>
+
+                <button
+                    id="clearSeatBtn"
+                    class="secondary"
+                >
+                    Clear
+                </button>
+
             </div>
 
-        </div>
+
+            <div
+                id="seatMessage"
+                class="message"
+            ></div>
+
+        </section>
+
+
+        <!-- =====================================================
+             FLIGHTS
+        ====================================================== -->
+
+        <section class="card full">
+
+            <div
+                style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    gap:15px;
+                    flex-wrap:wrap;
+                "
+            >
+
+                <h3>
+                    📋 Upcoming Flights
+                </h3>
+
+                <button
+                    id="refreshBtn"
+                    class="secondary"
+                >
+                    Refresh
+                </button>
+
+            </div>
+
+
+            <div
+                id="flightStatus"
+                class="small"
+                style="margin-bottom:12px;"
+            >
+                Loading flights...
+            </div>
+
+
+            <div
+                id="flightList"
+                class="flight-list"
+            >
+
+                <div class="empty">
+                    Loading...
+                </div>
+
+            </div>
+
+        </section>
+
 
     </div>
 
+</main>
 
-    <!-- =================================================
-         CANCEL BOOKING + SEAT MAP
-    ================================================== -->
-
-    <div class="grid-2">
-
-        <!-- CANCEL BOOKING -->
-
-        <div class="card">
-
-            <h2>Cancel Booking</h2>
-
-            <div class="description">
-                Cancel a passenger booking using its Booking ID.
-            </div>
-
-
-            <label>Booking ID</label>
-
-            <input
-                id="cancelBookingId"
-                type="number"
-                placeholder="Example: 48"
-            >
-
-
-            <button
-                class="danger"
-                onclick="cancelBooking()"
-            >
-                Cancel Booking
-            </button>
-
-
-            <div id="cancelBookingResult" class="result">
-                Cancel booking result will appear here.
-            </div>
-
-        </div>
-
-
-        <!-- SEAT MAP -->
-
-        <div class="card">
-
-            <h2>Seat Map Lookup</h2>
-
-            <div class="description">
-                Check occupied and available seats for a flight.
-            </div>
-
-
-            <label>Flight ID</label>
-
-            <input
-                id="seatMapFlightId"
-                type="number"
-                placeholder="Example: 15"
-            >
-
-
-            <button
-                class="light-btn"
-                onclick="loadSeatMap()"
-            >
-                Load Seat Map
-            </button>
-
-
-            <div id="seatMapResult" class="result">
-                Seat map will appear here.
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- =====================================================
-     BOTTOM NAVIGATION
-====================================================== -->
-
-<div class="bottom-navigation">
-
-    <h2>Switch Dashboard</h2>
-
-    <div class="bottom-nav-buttons">
-
-        <a href="index.html">
-            ✈️ Customer Booking
-        </a>
-
-        <a href="ops_agent.html">
-            ⚙️ Ops Agent
-        </a>
-
-        <a href="admin.html">
-            👑 Super Admin
-        </a>
-
-    </div>
-
-</div>
-
-
-<!-- =====================================================
-     JAVASCRIPT
-====================================================== -->
 
 <script>
 
-    const API_BASE =
-        "https://flight-management-capstone.onrender.com";
+
+/* =========================================================
+   CONFIGURATION
+========================================================= */
+
+const API_BASE =
+    "https://flight-management-capstone.onrender.com";
 
 
-    /* =================================================
-       HELPER
-    ================================================== */
+/*
+ * Backend role
+ */
 
-    function showResult(elementId, message, success = false) {
+const OPS_ROLE =
+    "ops_agent";
 
-        const element =
-            document.getElementById(elementId);
 
-        element.textContent =
-            typeof message === "string"
-                ? message
-                : JSON.stringify(message, null, 2);
+/* =========================================================
+   HELPER
+========================================================= */
 
-        element.className =
-            success
-                ? "result success"
-                : "result error";
+function $(id) {
+
+    return document.getElementById(id);
+
+}
+
+
+function makeIdempotencyKey() {
+
+    return crypto.randomUUID();
+
+}
+
+
+function toISOStringFromLocal(value) {
+
+    if (!value) {
+        return "";
+    }
+
+    return new Date(value)
+        .toISOString();
+
+}
+
+
+function formatDate(value) {
+
+    if (!value) {
+        return "N/A";
+    }
+
+    const date =
+        new Date(value);
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return value;
+
     }
 
 
-    async function getResponseData(response) {
+    return date.toLocaleString([], {
 
-        const text =
-            await response.text();
+        dateStyle: "medium",
+
+        timeStyle: "short"
+
+    });
+
+}
+
+
+function escapeHtml(value) {
+
+    return String(
+        value ?? ""
+    )
+
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+
+    .replace(
+        /</g,
+        "&lt;"
+    )
+
+    .replace(
+        />/g,
+        "&gt;"
+    )
+
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+
+}
+
+
+function showMessage(
+    element,
+    message,
+    type
+) {
+
+    element.textContent =
+        message || "";
+
+
+    element.className =
+        message
+            ? `message ${type}`
+            : "message";
+
+}
+
+
+/* =========================================================
+   BACKEND REQUEST
+========================================================= */
+
+async function apiFetch(
+    url,
+    options = {}
+) {
+
+    const response =
+        await fetch(
+
+            url,
+
+            {
+
+                ...options,
+
+                headers: {
+
+                    ...(options.headers || {}),
+
+                    /*
+                     * Ops Agent role
+                     */
+                    "X-Admin-Role":
+                        OPS_ROLE
+
+                }
+
+            }
+
+        );
+
+
+    if (!response.ok) {
+
+        let message =
+            `HTTP ${response.status}`;
+
 
         try {
-            return JSON.parse(text);
-        }
 
+            const data =
+                await response.json();
+
+
+            if (
+                typeof data.detail ===
+                "string"
+            ) {
+
+                message =
+                    data.detail;
+
+            }
+
+            else if (
+                Array.isArray(
+                    data.detail
+                )
+            ) {
+
+                message =
+                    data.detail
+                        .map(item =>
+                            item.msg ||
+                            JSON.stringify(item)
+                        )
+                        .join("; ");
+
+            }
+
+            else if (
+                data.message
+            ) {
+
+                message =
+                    data.message;
+
+            }
+
+        }
         catch {
-            return text;
+
+            // Keep HTTP message
+
         }
+
+
+        throw new Error(
+            message
+        );
+
     }
 
 
-    /* =================================================
-       SEARCH FLIGHTS
-    ================================================== */
+    return response;
 
-    async function searchFlights() {
-
-        const origin =
-            document.getElementById("searchOrigin")
-                .value
-                .trim()
-                .toUpperCase();
-
-        const destination =
-            document.getElementById("searchDestination")
-                .value
-                .trim()
-                .toUpperCase();
-
-        const date =
-            document.getElementById("searchDate")
-                .value;
+}
 
 
-        if (!origin || !destination || !date) {
+/* =========================================================
+   UPDATE SCHEDULE
+========================================================= */
 
-            showResult(
-                "searchResult",
-                "Please enter Origin, Destination and Date."
-            );
+$("scheduleBtn")
+    .addEventListener(
+        "click",
+        async () => {
 
-            return;
-        }
-
-
-        showResult(
-            "searchResult",
-            "Searching flights..."
-        );
-
-
-        try {
-
-            const url =
-                `${API_BASE}/search` +
-                `?origin=${encodeURIComponent(origin)}` +
-                `&destination=${encodeURIComponent(destination)}` +
-                `&date=${encodeURIComponent(date)}`;
+            const flightId =
+                Number(
+                    $("scheduleFlightId")
+                        .value
+                );
 
 
-            const response =
-                await fetch(url);
+            const departure =
+                $("newDeparture")
+                    .value;
 
 
-            const data =
-                await getResponseData(response);
+            const arrival =
+                $("newArrival")
+                    .value;
 
 
-            if (!response.ok) {
+            if (
+                !Number.isInteger(
+                    flightId
+                ) ||
+                flightId <= 0
+            ) {
 
-                showResult(
-                    "searchResult",
-                    `Error ${response.status}:\n\n` +
-                    JSON.stringify(data, null, 2)
+                showMessage(
+
+                    $("scheduleMessage"),
+
+                    "Please enter a valid Flight ID.",
+
+                    "error"
+
                 );
 
                 return;
+
             }
 
 
-            showResult(
-                "searchResult",
-                JSON.stringify(data, null, 2),
-                true
-            );
+            if (
+                !departure ||
+                !arrival
+            ) {
 
-        }
+                showMessage(
 
-        catch (error) {
+                    $("scheduleMessage"),
 
-            showResult(
-                "searchResult",
-                "Backend connection failed:\n\n" +
-                error.message
-            );
+                    "Please enter both departure and arrival times.",
 
-        }
+                    "error"
 
-    }
-
-
-    /* =================================================
-       HOLD SEAT
-    ================================================== */
-
-    async function holdSeat() {
-
-        const flightId =
-            document.getElementById("holdFlightId")
-                .value;
-
-        const passengerId =
-            document.getElementById("passengerId")
-                .value;
-
-        const seatClass =
-            document.getElementById("seatClass")
-                .value;
-
-        const fare =
-            document.getElementById("fare")
-                .value;
-
-        const requestedSeat =
-            document.getElementById("requestedSeat")
-                .value
-                .trim();
-
-
-        if (!flightId || !passengerId) {
-
-            showResult(
-                "holdResult",
-                "Please enter Flight ID and Passenger ID."
-            );
-
-            return;
-        }
-
-
-        const payload = {
-
-            flight_id: Number(flightId),
-
-            passenger_id: Number(passengerId),
-
-            seat_class: seatClass,
-
-            fare: fare
-
-        };
-
-
-        if (requestedSeat) {
-
-            payload.requested_seat_number =
-                requestedSeat;
-
-        }
-
-
-        showResult(
-            "holdResult",
-            "Holding seat..."
-        );
-
-
-        try {
-
-            const idempotencyKey =
-                "ops-" +
-                Date.now() +
-                "-" +
-                Math.random()
-                    .toString(36)
-                    .substring(2);
-
-
-            const response =
-                await fetch(
-                    `${API_BASE}/bookings`,
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Idempotency-Key": idempotencyKey
-                        },
-
-                        body:
-                            JSON.stringify(payload)
-                    }
-                );
-
-
-            const data =
-                await getResponseData(response);
-
-
-            if (!response.ok) {
-
-                showResult(
-                    "holdResult",
-                    `Error ${response.status}:\n\n` +
-                    JSON.stringify(data, null, 2)
                 );
 
                 return;
+
             }
 
 
-            /* Automatically put Booking ID
-               into Confirm and Cancel fields */
-
-            if (data.booking_id) {
-
-                document.getElementById(
-                    "confirmBookingId"
-                ).value =
-                    data.booking_id;
+            const button =
+                $("scheduleBtn");
 
 
-                document.getElementById(
-                    "cancelBookingId"
-                ).value =
-                    data.booking_id;
-            }
+            button.disabled =
+                true;
 
 
-            showResult(
-                "holdResult",
-                "Seat held successfully!\n\n" +
-                JSON.stringify(data, null, 2),
-                true
-            );
-
-        }
-
-        catch (error) {
-
-            showResult(
-                "holdResult",
-                "Backend connection failed:\n\n" +
-                error.message
-            );
-
-        }
-
-    }
+            button.textContent =
+                "Updating...";
 
 
-    /* =================================================
-       CONFIRM BOOKING
-    ================================================== */
+            try {
 
-    async function confirmBooking() {
+                const response =
+                    await apiFetch(
 
-        const bookingId =
-            document.getElementById("confirmBookingId")
-                .value;
+                        `${API_BASE}/admin/flights/${flightId}/schedule`,
 
+                        {
 
-        if (!bookingId) {
+                            method: "PATCH",
 
-            showResult(
-                "confirmResult",
-                "Please enter the Booking ID."
-            );
+                            headers: {
 
-            return;
-        }
+                                "Content-Type":
+                                    "application/json",
 
+                                "Idempotency-Key":
+                                    makeIdempotencyKey()
 
-        showResult(
-            "confirmResult",
-            "Confirming booking..."
-        );
+                            },
 
+                            body:
+                                JSON.stringify({
 
-        try {
+                                    new_departure_ts:
+                                        toISOStringFromLocal(
+                                            departure
+                                        ),
 
-            const response =
-                await fetch(
-                    `${API_BASE}/bookings/${bookingId}/confirm`,
-                    {
-                        method: "POST",
+                                    new_arrival_ts:
+                                        toISOStringFromLocal(
+                                            arrival
+                                        )
 
-                        headers: {
-                            "Content-Type": "application/json"
+                                })
+
                         }
-                    }
+
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                showMessage(
+
+                    $("scheduleMessage"),
+
+                    `✓ ${data.message || "Schedule updated successfully."}`,
+
+                    "success"
+
                 );
 
 
-            const data =
-                await getResponseData(response);
+                await loadFlights();
+
+            }
+            catch (error) {
+
+                showMessage(
+
+                    $("scheduleMessage"),
+
+                    error.message,
+
+                    "error"
+
+                );
+
+            }
+            finally {
+
+                button.disabled =
+                    false;
 
 
-            if (!response.ok) {
+                button.textContent =
+                    "Update Schedule";
 
-                showResult(
-                    "confirmResult",
-                    `Error ${response.status}:\n\n` +
-                    JSON.stringify(data, null, 2)
+            }
+
+        }
+    );
+
+
+/* =========================================================
+   CLEAR SCHEDULE
+========================================================= */
+
+$("clearScheduleBtn")
+    .addEventListener(
+        "click",
+        () => {
+
+            $("scheduleFlightId")
+                .value = "";
+
+            $("newDeparture")
+                .value = "";
+
+            $("newArrival")
+                .value = "";
+
+            showMessage(
+                $("scheduleMessage"),
+                "",
+                ""
+            );
+
+        }
+    );
+
+
+/* =========================================================
+   ADJUST SEAT CLASS
+========================================================= */
+
+$("seatBtn")
+    .addEventListener(
+        "click",
+        async () => {
+
+            const flightId =
+                Number(
+                    $("seatFlightId")
+                        .value
+                );
+
+
+            const className =
+                $("seatClass")
+                    .value;
+
+
+            const newTotalSeats =
+                Number(
+                    $("newTotalSeats")
+                        .value
+                );
+
+
+            if (
+                !Number.isInteger(
+                    flightId
+                ) ||
+                flightId <= 0
+            ) {
+
+                showMessage(
+
+                    $("seatMessage"),
+
+                    "Please enter a valid Flight ID.",
+
+                    "error"
+
                 );
 
                 return;
+
             }
 
 
-            showResult(
-                "confirmResult",
-                "Booking confirmed successfully!\n\n" +
-                JSON.stringify(data, null, 2),
-                true
-            );
+            if (
+                !Number.isInteger(
+                    newTotalSeats
+                ) ||
+                newTotalSeats <= 0
+            ) {
 
-        }
+                showMessage(
 
-        catch (error) {
+                    $("seatMessage"),
 
-            showResult(
-                "confirmResult",
-                "Backend connection failed:\n\n" +
-                error.message
-            );
+                    "Please enter a valid number of seats.",
 
-        }
+                    "error"
 
-    }
+                );
 
+                return;
 
-    /* =================================================
-       CANCEL BOOKING
-    ================================================== */
-
-    async function cancelBooking() {
-
-        const bookingId =
-            document.getElementById("cancelBookingId")
-                .value;
+            }
 
 
-        if (!bookingId) {
-
-            showResult(
-                "cancelBookingResult",
-                "Please enter the Booking ID."
-            );
-
-            return;
-        }
+            const button =
+                $("seatBtn");
 
 
-        const confirmed =
-            confirm(
-                `Are you sure you want to cancel Booking ID ${bookingId}?`
-            );
+            button.disabled =
+                true;
 
 
-        if (!confirmed) {
-            return;
-        }
+            button.textContent =
+                "Updating...";
 
 
-        showResult(
-            "cancelBookingResult",
-            "Cancelling booking..."
-        );
+            try {
 
+                const response =
+                    await apiFetch(
 
-        try {
+                        `${API_BASE}/admin/flights/${flightId}/seat-classes`,
 
-            const response =
-                await fetch(
-                    `${API_BASE}/bookings/${bookingId}/cancel`,
-                    {
-                        method: "POST",
+                        {
 
-                        headers: {
-                            "Content-Type": "application/json"
+                            method: "PATCH",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json",
+
+                                "Idempotency-Key":
+                                    makeIdempotencyKey()
+
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    class_name:
+                                        className,
+
+                                    new_total_seats:
+                                        newTotalSeats
+
+                                })
+
                         }
-                    }
+
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                showMessage(
+
+                    $("seatMessage"),
+
+                    `✓ ${data.class}: ${data.total_seats} total seats, ${data.available_seats} available, ${data.booked_seats} booked.`,
+
+                    "success"
+
                 );
 
 
-            const data =
-                await getResponseData(response);
+                await loadFlights();
 
+            }
+            catch (error) {
 
-            if (!response.ok) {
+                showMessage(
 
-                showResult(
-                    "cancelBookingResult",
-                    `Error ${response.status}:\n\n` +
-                    JSON.stringify(data, null, 2)
+                    $("seatMessage"),
+
+                    error.message,
+
+                    "error"
+
                 );
 
-                return;
+            }
+            finally {
+
+                button.disabled =
+                    false;
+
+
+                button.textContent =
+                    "Adjust Seats";
+
             }
 
+        }
+    );
 
-            showResult(
-                "cancelBookingResult",
-                "Booking cancelled successfully!\n\n" +
-                JSON.stringify(data, null, 2),
-                true
+
+/* =========================================================
+   CLEAR SEAT FORM
+========================================================= */
+
+$("clearSeatBtn")
+    .addEventListener(
+        "click",
+        () => {
+
+            $("seatFlightId")
+                .value = "";
+
+            $("newTotalSeats")
+                .value = "";
+
+            $("seatClass")
+                .value =
+                "economy";
+
+
+            showMessage(
+                $("seatMessage"),
+                "",
+                ""
+            );
+
+        }
+    );
+
+
+/* =========================================================
+   LOAD FLIGHTS
+========================================================= */
+
+async function loadFlights() {
+
+    $("flightStatus")
+        .textContent =
+        "Loading flights...";
+
+
+    $("flightList").innerHTML = `
+
+        <div class="empty">
+
+            Loading flights...
+
+        </div>
+
+    `;
+
+
+    try {
+
+        const response =
+            await fetch(
+
+                `${API_BASE}/flights/upcoming`,
+
+                {
+
+                    headers: {
+
+                        "Accept":
+                            "application/json"
+
+                    }
+
+                }
+
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Unable to load flights. HTTP ${response.status}`
             );
 
         }
 
-        catch (error) {
 
-            showResult(
-                "cancelBookingResult",
-                "Backend connection failed:\n\n" +
-                error.message
-            );
-
-        }
-
-    }
+        const data =
+            await response.json();
 
 
-    /* =================================================
-       SEAT MAP
-    ================================================== */
-
-    async function loadSeatMap() {
-
-        const flightId =
-            document.getElementById("seatMapFlightId")
-                .value;
+        const flights =
+            Array.isArray(
+                data.flights
+            )
+                ? data.flights
+                : [];
 
 
-        if (!flightId) {
-
-            showResult(
-                "seatMapResult",
-                "Please enter the Flight ID."
-            );
-
-            return;
-        }
-
-
-        showResult(
-            "seatMapResult",
-            "Loading seat map..."
+        renderFlights(
+            flights
         );
 
+    }
+    catch (error) {
 
-        try {
+        $("flightStatus")
+            .textContent =
+            "Failed to load flights.";
 
-            const response =
-                await fetch(
-                    `${API_BASE}/flights/${flightId}/seatmap`
+
+        $("flightList").innerHTML = `
+
+            <div class="empty">
+
+                ${escapeHtml(
+                    error.message
+                )}
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+/* =========================================================
+   RENDER FLIGHTS
+========================================================= */
+
+function renderFlights(
+    flights
+) {
+
+    const list =
+        $("flightList");
+
+
+    list.innerHTML = "";
+
+
+    $("flightStatus")
+        .textContent =
+        `${flights.length} upcoming flight(s)`;
+
+
+    if (
+        flights.length === 0
+    ) {
+
+        list.innerHTML = `
+
+            <div class="empty">
+
+                No upcoming flights found.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    flights.forEach(
+        flight => {
+
+            const card =
+                document.createElement(
+                    "div"
                 );
 
 
-            const data =
-                await getResponseData(response);
+            card.className =
+                "flight-card";
 
 
-            if (!response.ok) {
+            let classesHtml = "";
 
-                showResult(
-                    "seatMapResult",
-                    `Error ${response.status}:\n\n` +
-                    JSON.stringify(data, null, 2)
-                );
 
-                return;
+            if (
+                Array.isArray(
+                    flight.classes
+                )
+            ) {
+
+                classesHtml =
+                    flight.classes
+                        .map(
+                            item => `
+
+                                <span class="chip">
+
+                                    ${escapeHtml(
+                                        item.class_name ||
+                                        item.class ||
+                                        "Class"
+                                    )}
+
+                                    :
+
+                                    ${item.available_seats ??
+                                      item.available ??
+                                      "N/A"}
+
+                                    available
+
+                                </span>
+
+                            `
+                        )
+                        .join("");
+
             }
 
 
-            showResult(
-                "seatMapResult",
-                JSON.stringify(data, null, 2),
-                true
+            card.innerHTML = `
+
+                <div class="flight-top">
+
+                    <div>
+
+                        <div class="flight-number">
+
+                            ${escapeHtml(
+                                flight.flight_number
+                            )}
+
+                        </div>
+
+
+                        <div class="route">
+
+                            ${escapeHtml(
+                                flight.origin
+                            )}
+
+                            →
+
+                            ${escapeHtml(
+                                flight.destination
+                            )}
+
+                        </div>
+
+
+                        <div class="meta">
+
+                            Flight ID:
+                            <strong>
+                                ${flight.flight_id}
+                            </strong>
+
+                            <br>
+
+                            Departure:
+                            ${escapeHtml(
+                                formatDate(
+                                    flight.departure_ts
+                                )
+                            )}
+
+                            <br>
+
+                            Arrival:
+                            ${escapeHtml(
+                                formatDate(
+                                    flight.arrival_ts
+                                )
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <span class="status">
+
+                        Scheduled
+
+                    </span>
+
+                </div>
+
+
+                ${
+                    classesHtml
+                        ? `
+                            <div class="class-list">
+
+                                ${classesHtml}
+
+                            </div>
+                          `
+                        : ""
+                }
+
+
+                <div class="actions">
+
+                    <button
+                        class="secondary edit-flight"
+                        data-id="${flight.flight_id}"
+                    >
+                        Edit Schedule
+                    </button>
+
+
+                    <button
+                        class="secondary adjust-flight"
+                        data-id="${flight.flight_id}"
+                    >
+                        Adjust Seats
+                    </button>
+
+                </div>
+
+            `;
+
+
+            list.appendChild(
+                card
             );
 
         }
+    );
 
-        catch (error) {
+}
 
-            showResult(
-                "seatMapResult",
-                "Backend connection failed:\n\n" +
-                error.message
+
+/* =========================================================
+   FLIGHT CARD BUTTONS
+========================================================= */
+
+document.addEventListener(
+    "click",
+    event => {
+
+
+        const edit =
+            event.target.closest(
+                ".edit-flight"
             );
+
+
+        if (edit) {
+
+            const id =
+                edit.dataset.id;
+
+
+            $("scheduleFlightId")
+                .value =
+                id;
+
+
+            $("scheduleFlightId")
+                .focus();
+
+
+            window.scrollTo({
+
+                top:
+                    $("scheduleFlightId")
+                        .getBoundingClientRect()
+                        .top +
+                    window.scrollY -
+                    100,
+
+                behavior:
+                    "smooth"
+
+            });
+
+
+            return;
+
+        }
+
+
+        const adjust =
+            event.target.closest(
+                ".adjust-flight"
+            );
+
+
+        if (adjust) {
+
+            const id =
+                adjust.dataset.id;
+
+
+            $("seatFlightId")
+                .value =
+                id;
+
+
+            $("seatFlightId")
+                .focus();
+
+
+            window.scrollTo({
+
+                top:
+                    $("seatFlightId")
+                        .getBoundingClientRect()
+                        .top +
+                    window.scrollY -
+                    100,
+
+                behavior:
+                    "smooth"
+
+            });
 
         }
 
     }
+);
+
+
+/* =========================================================
+   REFRESH
+========================================================= */
+
+$("refreshBtn")
+    .addEventListener(
+        "click",
+        loadFlights
+    );
+
+
+/* =========================================================
+   INITIAL LOAD
+========================================================= */
+
+loadFlights();
+
 
 </script>
 
